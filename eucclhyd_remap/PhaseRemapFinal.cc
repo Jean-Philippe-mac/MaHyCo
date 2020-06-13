@@ -183,6 +183,10 @@ void EucclhydRemap::remapCellcenteredVariable() noexcept {
         fracvol1(cCells) = fracvol(cCells)[0];
         fracvol2(cCells) = fracvol(cCells)[1];
         fracvol3(cCells) = fracvol(cCells)[2];
+	// pression
+        p1(cCells) = pp(cCells)[0];
+        p2(cCells) = pp(cCells)[1];
+        p3(cCells) = pp(cCells)[2];
         // sorties paraview limitées
         if (V_nplus1(cCells)[0] > 0.)
           Vxc(cCells) =

@@ -809,6 +809,45 @@ void EucclhydRemap::updateCellCenteredLagrangeVariables() noexcept {
               0.5 * vLagrange(cCells) * rhoLagrange *
               (VLagrange[0] * VLagrange[0] + VLagrange[1] * VLagrange[1]);
 
+	if (options->AvecProjection == 0) {
+	// Calcul des valeurs en n+1 si on ne fait pas de projection
+	// Vnode_nplus1
+	V_nplus1(cCells) = VLagrange;
+	// densites et energies
+	rho_nplus1(cCells) = 0.;
+	eps_nplus1(cCells) = 0.;
+	for (imat=0; imat < nbmatmax; imat++) {	  
+	  // densités
+	  rho_nplus1(cCells) +=  fracmass(cCells)[imat] * rhoLagrange;
+	  if (fracvol(cCells)[imat] > options->threshold) {
+	    rhop_nplus1(cCells)[imat] = fracmass(cCells)[imat] * rhoLagrange / fracvol(cCells)[imat];
+	  } else {
+	    rhop_nplus1(cCells)[imat] = 0.;
+	  }
+	  // energies
+	  eps_nplus1(cCells) += fracmass(cCells)[imat] * pepsLagrange[imat];
+	  if (fracvol(cCells)[imat] > options->threshold) {
+	    epsp_nplus1(cCells)[imat] = pepsLagrange[imat];
+	  } else {
+	    epsp_nplus1(cCells)[imat] = 0.;
+	  }
+	}
+	// variables pour les sorties du code
+	fracvol1(cCells) = fracvol(cCells)[0];
+	fracvol2(cCells) = fracvol(cCells)[1];
+	fracvol3(cCells) = fracvol(cCells)[2];
+	// sorties paraview limitées
+	if (V_nplus1(cCells)[0]>0.) Vxc(cCells) = MathFunctions::max(V_nplus1(cCells)[0],options->threshold);
+	if (V_nplus1(cCells)[0]<0.) Vxc(cCells) = MathFunctions::min(V_nplus1(cCells)[0],-options->threshold);
+      
+	if (V_nplus1(cCells)[1]>0.) Vyc(cCells) = MathFunctions::max(V_nplus1(cCells)[1],options->threshold);
+	if (V_nplus1(cCells)[1]<0.) Vyc(cCells) = MathFunctions::min(V_nplus1(cCells)[1],-options->threshold);
+	// pression
+	p1(cCells) = pp(cCells)[0];
+	p2(cCells) = pp(cCells)[1];
+	p3(cCells) = pp(cCells)[2];
+	}
+
         if (options->projectionAvecPlateauPente == 1) {
           // option ou on ne regarde pas la variation de rho, V et e
           // phi = (f1, f2, rho1, rho2, Vx, Vy, e1, e2

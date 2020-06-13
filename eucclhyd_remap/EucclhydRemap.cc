@@ -89,9 +89,9 @@ void EucclhydRemap::executeTimeLoopN() noexcept {
                 << setiosflags(std::ios::scientific) << setprecision(8)
                 << setw(16) << t_n << __RESET__;
 
-    if (nbPart != 0) switchalpharho_rho();
+    if (options->AvecParticules == 1) switchalpharho_rho();
     computeEOS();  // @1.0
-    if (nbPart != 0) switchrho_alpharho();
+    if (options->AvecParticules == 1) switchrho_alpharho();
     computeGradients();                           // @1.0
     computeMass();                                // @1.0
     computeDissipationMatrix();                   // @2.0
@@ -110,16 +110,19 @@ void EucclhydRemap::executeTimeLoopN() noexcept {
     computeLagrangeVolumeAndCenterOfGravity();    // @6.0
     computeFacedeltaxLagrange();                  // @7.0
     updateCellCenteredLagrangeVariables();        // @7.0
-    computeGradPhiFace1();                        // @8.0
-    computeGradPhi1();                            // @9.0
-    computeUpwindFaceQuantitiesForProjection1();  // @10.0
-    computeUremap1();                             // @11.0
-    computeGradPhiFace2();                        // @12.0
-    computeGradPhi2();                            // @13.0
-    computeUpwindFaceQuantitiesForProjection2();  // @14.0
-    computeUremap2();                             // @15.0
-    remapCellcenteredVariable();                  // @16.0
-    if (nbPart != 0) {
+    
+    if (options->AvecProjection == 1) {
+      computeGradPhiFace1();                        // @8.0
+      computeGradPhi1();                            // @9.0
+      computeUpwindFaceQuantitiesForProjection1();  // @10.0
+      computeUremap1();                             // @11.0
+      computeGradPhiFace2();                        // @12.0
+      computeGradPhi2();                            // @13.0
+      computeUpwindFaceQuantitiesForProjection2();  // @14.0
+      computeUremap2();                             // @15.0
+      remapCellcenteredVariable();                  // @16.0
+    }
+    if (options->AvecParticules == 1) {  
       updateParticlePosition();
       updateParticleCoefficients();
       updateParticleVelocity();
@@ -145,8 +148,17 @@ void EucclhydRemap::executeTimeLoopN() noexcept {
       std::swap(F1_nplus1, F1_n);
       std::swap(F2_nplus1, F2_n);
       std::swap(F3_nplus1, F3_n);
-      std::swap(Vpart_nplus1, Vpart_n);
-      std::swap(Xpart_nplus1, Xpart_n);
+      if (options->AvecParticules == 1) {  
+	std::swap(Vpart_nplus1, Vpart_n);
+	std::swap(Xpart_nplus1, Xpart_n);
+      }
+      if (options->AvecProjection == 0) {
+	std::swap(vLagrange, v);
+	std::swap(XLagrange, X);
+	std::swap(XfLagrange, Xf);
+	std::swap(faceLengthLagrange, faceLength);
+	std::swap(XcLagrange, Xc);
+      }
     }
 
     cpu_timer.stop();

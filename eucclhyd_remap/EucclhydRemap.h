@@ -38,6 +38,7 @@ class EucclhydRemap {
     RealArray1D<nbmatmax> zeroVectmat = {{0.0, 0.0, 0.0}};
     RealArray1D<nbequamax> Uzero = {
         {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+    // cas test
     int UnitTestCase = 0;
     int SedovTestCase = 1;
     int TriplePoint = 2;
@@ -49,6 +50,7 @@ class EucclhydRemap {
     int BiShockBubble = 13;
     int BiSodCase = 14;
     int BiNohTestCase = 15;
+    // EOS
     int eosPerfectGas = 100;
     int symmetry = 200;
     int imposedVelocity = 201;
@@ -87,6 +89,11 @@ class EucclhydRemap {
     int projectionAvecPlateauPente = 0;
     int projectionConservative = 0;
     int projectionLimiteurMixte = 0;
+    int AvecProjection = 1;
+    int AvecParticules = 0;
+    int Adiabatique = 1;
+    int Isotherme = 2;
+    int AvecEquilibrage = -1;
 
     int leftFluxBC = 0;
     RealArray1D<nbequamax> leftFluxBCValue = Uzero;
@@ -258,6 +265,9 @@ class EucclhydRemap {
   Kokkos::View<double*> fracvol1;
   Kokkos::View<double*> fracvol2;
   Kokkos::View<double*> fracvol3;
+  Kokkos::View<double*> p1;
+  Kokkos::View<double*> p2;
+  Kokkos::View<double*> p3;
 
   Kokkos::View<double*> vpart;
   Kokkos::View<double*> wpart;
@@ -359,6 +369,9 @@ class EucclhydRemap {
         lplus("lplus", nbNodes, nbCellsOfNode),
         lminus("lminus", nbNodes, nbCellsOfNode),
         p("p", nbCells),
+	p1("p1", nbCells),
+	p2("p2", nbCells),
+	p3("p3", nbCells),
         pp("pp", nbCells),
         m("m", nbCells),
         mp("mp", nbCells),
