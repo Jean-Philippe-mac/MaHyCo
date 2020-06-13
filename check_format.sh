@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+##!/usr/bin/bash
 #
 # This script returns 0 if the difference with REF_BRANCH has formatted according to STYLE
 #

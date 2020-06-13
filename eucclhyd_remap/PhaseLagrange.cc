@@ -251,9 +251,15 @@ void EucclhydRemap::computeDissipationMatrix() noexcept {
 void EucclhydRemap::computedeltatc() noexcept {
   Kokkos::parallel_for(
       "computedeltatc", nbCells, KOKKOS_LAMBDA(const int& cCells) {
-        deltatc(cCells) =
+	if (options->AvecProjection == 1) {
+	  // cfl euler
+	  deltatc(cCells) =
             v(cCells) / (perim(cCells) *
                          (MathFunctions::norm(V_n(cCells)) + vitson(cCells)));
+	} else {
+	  // cfl lagrange
+	  deltatc(cCells) = v(cCells) / (perim(cCells) * vitson(cCells));
+	}
       });
 }
 /**
@@ -540,6 +546,25 @@ void EucclhydRemap::computeLagrangePosition() noexcept {
         XfLagrange(fFaces) = X_face;
         faceLengthLagrange(fFaces) = MathFunctions::norm(face_vec);
       });
+  if (options->AvecProjection == 0) {
+    Kokkos::parallel_for("computeLagrangePosition", nbCells, KOKKOS_LAMBDA(const int& cCells)
+      {
+	int cId(cCells);
+	double reduction13 = 0.0;
+	{
+	  auto nodesOfCellC(mesh->getNodesOfCell(cId));
+	  for (int pNodesOfCellC=0; pNodesOfCellC<nodesOfCellC.size(); pNodesOfCellC++)
+	    {
+	      int pId(nodesOfCellC[pNodesOfCellC]);
+	      int pPlus1Id(nodesOfCellC[(pNodesOfCellC+1+nbNodesOfCell)%nbNodesOfCell]);
+	      int pNodes(pId);
+	      int pPlus1Nodes(pPlus1Id);
+	      reduction13 = reduction13 + (MathFunctions::norm(ArrayOperations::minus(X(pNodes), X(pPlus1Nodes))));
+	    }
+	}
+	perim(cCells) = reduction13;			
+    });
+  }
 }
 
 /**
