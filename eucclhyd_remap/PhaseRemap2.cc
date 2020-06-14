@@ -1,9 +1,11 @@
 #include <math.h>  // for sqrt
+
 #include <Kokkos_Core.hpp>
-#include <algorithm>                // for copy
-#include <array>                    // for array
-#include <iostream>                 // for operator<<, basic_ostream::operat...
-#include <vector>                   // for allocator, vector
+#include <algorithm>  // for copy
+#include <array>      // for array
+#include <iostream>   // for operator<<, basic_ostream::operat...
+#include <vector>     // for allocator, vector
+
 #include "EucclhydRemap.h"          // for EucclhydRemap, EucclhydRemap::Opt...
 #include "UtilesRemap-Impl.h"       // for EucclhydRemap::computeIntersectionPP
 #include "mesh/CartesianMesh2D.h"   // for CartesianMesh2D

@@ -4,13 +4,15 @@
 /*---------------------------------------*/
 /*---------------------------------------*/
 
-#include <stddef.h>                       // for size_t
+#include <stddef.h>  // for size_t
+
 #include <Kokkos_Core.hpp>                // for KOKKOS_LAMBDA
 #include <OpenMP/Kokkos_OpenMP_Exec.hpp>  // for OpenMP::impl_is_initialized
 #include <algorithm>                      // for copy
 #include <array>                          // for array
 #include <string>                         // for allocator, string
 #include <vector>                         // for vector
+
 #include "EucclhydRemap.h"
 #include "mesh/CartesianMesh2D.h"  // for CartesianMesh2D, CartesianM...
 #include "mesh/MeshGeometry.h"     // for MeshGeometry
@@ -369,9 +371,9 @@ class EucclhydRemap {
         lplus("lplus", nbNodes, nbCellsOfNode),
         lminus("lminus", nbNodes, nbCellsOfNode),
         p("p", nbCells),
-	p1("p1", nbCells),
-	p2("p2", nbCells),
-	p3("p3", nbCells),
+        p1("p1", nbCells),
+        p2("p2", nbCells),
+        p3("p3", nbCells),
         pp("pp", nbCells),
         m("m", nbCells),
         mp("mp", nbCells),
@@ -463,9 +465,9 @@ class EucclhydRemap {
         Mnode("Mnode", nbNodes) {
     // Copy node coordinates
     const auto& gNodes = mesh->getGeometry()->getNodes();
-    Kokkos::parallel_for(nbNodes, KOKKOS_LAMBDA(const int& rNodes) {
-      X(rNodes) = gNodes[rNodes];
-    });
+    Kokkos::parallel_for(
+        nbNodes,
+        KOKKOS_LAMBDA(const int& rNodes) { X(rNodes) = gNodes[rNodes]; });
   }
 
  private:

@@ -1,8 +1,10 @@
-#include <stdlib.h>               // for exit
-#include <Kokkos_Core.hpp>        // for KOKKOS_LAMBDA
-#include <array>                  // for array
-#include <iostream>               // for operator<<, basic_ostream, endl
-#include <memory>                 // for allocator
+#include <stdlib.h>  // for exit
+
+#include <Kokkos_Core.hpp>  // for KOKKOS_LAMBDA
+#include <array>            // for array
+#include <iostream>         // for operator<<, basic_ostream, endl
+#include <memory>           // for allocator
+
 #include "EucclhydRemap.h"        // for EucclhydRemap, EucclhydRemap::...
 #include "types/MathFunctions.h"  // for max, min
 #include "types/MultiArray.h"     // for operator<<
@@ -183,7 +185,7 @@ void EucclhydRemap::remapCellcenteredVariable() noexcept {
         fracvol1(cCells) = fracvol(cCells)[0];
         fracvol2(cCells) = fracvol(cCells)[1];
         fracvol3(cCells) = fracvol(cCells)[2];
-	// pression
+        // pression
         p1(cCells) = pp(cCells)[0];
         p2(cCells) = pp(cCells)[1];
         p3(cCells) = pp(cCells)[2];
@@ -205,17 +207,19 @@ void EucclhydRemap::remapCellcenteredVariable() noexcept {
   double reductionE(0.), reductionM(0.);
   {
     Kokkos::Sum<double> reducerE(reductionE);
-    Kokkos::parallel_reduce("reductionE", nbCells,
-                            KOKKOS_LAMBDA(const int& cCells, double& x) {
-                              reducerE.join(x, ETOT_T(cCells));
-                            },
-                            reducerE);
+    Kokkos::parallel_reduce(
+        "reductionE", nbCells,
+        KOKKOS_LAMBDA(const int& cCells, double& x) {
+          reducerE.join(x, ETOT_T(cCells));
+        },
+        reducerE);
     Kokkos::Sum<double> reducerM(reductionM);
-    Kokkos::parallel_reduce("reductionM", nbCells,
-                            KOKKOS_LAMBDA(const int& cCells, double& x) {
-                              reducerM.join(x, MTOT_0(cCells));
-                            },
-                            reducerM);
+    Kokkos::parallel_reduce(
+        "reductionM", nbCells,
+        KOKKOS_LAMBDA(const int& cCells, double& x) {
+          reducerM.join(x, MTOT_0(cCells));
+        },
+        reducerM);
   }
   ETOTALE_T = reductionE;
   MASSET_T = reductionM;

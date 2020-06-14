@@ -1,8 +1,9 @@
 #include <Kokkos_Core.hpp>
-#include <algorithm>                // for copy
-#include <array>                    // for array
-#include <iostream>                 // for operator<<, basic_ostream::operat...
-#include <vector>                   // for allocator, vector
+#include <algorithm>  // for copy
+#include <array>      // for array
+#include <iostream>   // for operator<<, basic_ostream::operat...
+#include <vector>     // for allocator, vector
+
 #include "EucclhydRemap.h"          // for EucclhydRemap, EucclhydRemap::Opt...
 #include "UtilesRemap-Impl.h"       // for EucclhydRemap::computeRemapFlux
 #include "mesh/CartesianMesh2D.h"   // for CartesianMesh2D
@@ -18,41 +19,42 @@
  */
 void EucclhydRemap::computeBoundaryNodeVelocities() noexcept {
   auto leftNodes(mesh->getLeftNodes());
-  Kokkos::parallel_for("computeBoundaryNodeVelocities", nbLeftNodes,
-                       KOKKOS_LAMBDA(const int& pLeftNodes) {
-                         int pId(leftNodes[pLeftNodes]);
-                         int pNodes(pId);
-                         Vnode_nplus1(pNodes) = nodeVelocityBoundaryCondition(
-                             options->leftBC, options->leftBCValue,
-                             Mnode(pNodes), G(pNodes));
-                       });
+  Kokkos::parallel_for(
+      "computeBoundaryNodeVelocities", nbLeftNodes,
+      KOKKOS_LAMBDA(const int& pLeftNodes) {
+        int pId(leftNodes[pLeftNodes]);
+        int pNodes(pId);
+        Vnode_nplus1(pNodes) = nodeVelocityBoundaryCondition(
+            options->leftBC, options->leftBCValue, Mnode(pNodes), G(pNodes));
+      });
   auto rightNodes(mesh->getRightNodes());
-  Kokkos::parallel_for("computeBoundaryNodeVelocities", nbRightNodes,
-                       KOKKOS_LAMBDA(const int& pRightNodes) {
-                         int pId(rightNodes[pRightNodes]);
-                         int pNodes(pId);
-                         Vnode_nplus1(pNodes) = nodeVelocityBoundaryCondition(
-                             options->rightBC, options->rightBCValue,
-                             Mnode(pNodes), G(pNodes));
-                       });
+  Kokkos::parallel_for(
+      "computeBoundaryNodeVelocities", nbRightNodes,
+      KOKKOS_LAMBDA(const int& pRightNodes) {
+        int pId(rightNodes[pRightNodes]);
+        int pNodes(pId);
+        Vnode_nplus1(pNodes) = nodeVelocityBoundaryCondition(
+            options->rightBC, options->rightBCValue, Mnode(pNodes), G(pNodes));
+      });
   auto topNodes(mesh->getTopNodes());
-  Kokkos::parallel_for("computeBoundaryNodeVelocities", nbTopNodes,
-                       KOKKOS_LAMBDA(const int& pTopNodes) {
-                         int pId(topNodes[pTopNodes]);
-                         int pNodes(pId);
-                         Vnode_nplus1(pNodes) = nodeVelocityBoundaryCondition(
-                             options->topBC, options->topBCValue, Mnode(pNodes),
-                             G(pNodes));
-                       });
+  Kokkos::parallel_for(
+      "computeBoundaryNodeVelocities", nbTopNodes,
+      KOKKOS_LAMBDA(const int& pTopNodes) {
+        int pId(topNodes[pTopNodes]);
+        int pNodes(pId);
+        Vnode_nplus1(pNodes) = nodeVelocityBoundaryCondition(
+            options->topBC, options->topBCValue, Mnode(pNodes), G(pNodes));
+      });
   auto bottomNodes(mesh->getBottomNodes());
-  Kokkos::parallel_for("computeBoundaryNodeVelocities", nbBottomNodes,
-                       KOKKOS_LAMBDA(const int& pBottomNodes) {
-                         int pId(bottomNodes[pBottomNodes]);
-                         int pNodes(pId);
-                         Vnode_nplus1(pNodes) = nodeVelocityBoundaryCondition(
-                             options->bottomBC, options->bottomBCValue,
-                             Mnode(pNodes), G(pNodes));
-                       });
+  Kokkos::parallel_for(
+      "computeBoundaryNodeVelocities", nbBottomNodes,
+      KOKKOS_LAMBDA(const int& pBottomNodes) {
+        int pId(bottomNodes[pBottomNodes]);
+        int pNodes(pId);
+        Vnode_nplus1(pNodes) = nodeVelocityBoundaryCondition(
+            options->bottomBC, options->bottomBCValue, Mnode(pNodes),
+            G(pNodes));
+      });
   auto topLeftNode(mesh->getTopLeftNode());
   Kokkos::parallel_for(
       "computeBoundaryNodeVelocities", nbTopLeftNode,
