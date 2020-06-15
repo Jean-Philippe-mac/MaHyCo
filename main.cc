@@ -39,6 +39,7 @@ int main(int argc, char* argv[]) {
     output = argv[11];
   } else if (argc == 2) {
     o->testCase = std::atof(argv[1]);
+    // lecture ici
   } else if (argc != 1) {
     std::cerr << "[ERROR] Wrong number of arguments. Expecting 4 or 5 args: X "
                  "Y Xlength Ylength (output)."
