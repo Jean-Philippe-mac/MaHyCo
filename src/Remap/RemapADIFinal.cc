@@ -1,5 +1,6 @@
 // -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "RemapADIService.h"
+#include "AcceleratorUtils.h"
 
 /**
  *******************************************************************************
@@ -17,6 +18,7 @@
  */
 void RemapADIService::remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
   
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans remapVariables";
   mm = IMeshMaterialMng::getReference(mesh());
   CellToAllEnvCellConverter all_env_cell_converter(mm);
@@ -75,7 +77,6 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
   UniqueArray<Real> density_env_nplus1(nb_env);
   UniqueArray<Real> internal_energy_env_nplus1(nb_env);
   m_cell_mass.fill(0.0);
-  Integer index_env;
   ENUMERATE_CELL(icell, allCells()) {
     Cell cell = * icell;   
     Real vol = m_euler_volume[cell];  // volume euler   
@@ -108,7 +109,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     Real unsurvol = 1. / vol;
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell;     
-      index_env = ev.environmentId();        
+      Integer index_env = ev.environmentId();        
     //      m_fracvol[ev] = vol_nplus1[index_env] / volt_normalise;
        // m_fracvol[ev] = vol_nplus1[index_env] / vol;
        m_fracvol[ev] = vol_nplus1[index_env] * unsurvol;
@@ -120,10 +121,9 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     Integer matcell(0);
     Integer imatpure(-1);  
     Real unsursomme_frac = 1. / somme_frac;
-    index_env = 0;  
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell;  
-      index_env = ev.environmentId();  
+      Integer index_env = ev.environmentId();  
       // m_fracvol[ev] /= somme_frac; 
       m_fracvol[ev] *= unsursomme_frac;
       if (m_fracvol[ev] > 0.) {
@@ -147,7 +147,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       Real unsurmasset = 1./  masset;
       ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
         EnvCell ev = *ienvcell;  
-        index_env = ev.environmentId();  
+        Integer index_env = ev.environmentId();  
         // m_mass_fraction[ev] = m_u_lagrange[cell][nb_env + index_env] / masset;
         m_mass_fraction[ev] = m_u_lagrange[cell][nb_env + index_env] * unsurmasset;
         if (m_fracvol[ev] < options()->threshold) {
@@ -167,7 +167,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     Real density_nplus1 = 0.;
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell; 
-      index_env = ev.environmentId();  
+      Integer index_env = ev.environmentId();  
       density_env_nplus1[index_env] = 0.;
       if (m_fracvol[ev] > options()->threshold)
         density_env_nplus1[index_env] = m_u_lagrange[cell][nb_env + index_env] 
@@ -179,7 +179,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     Real pseudo_nplus1 = 0.;
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell; 
-      index_env = ev.environmentId();  
+      Integer index_env = ev.environmentId();  
       internal_energy_env_nplus1[index_env] = 0.;
       
       if (m_fracvol[ev] > options()->threshold && m_u_lagrange[cell][nb_env + index_env] != 0.) {
@@ -195,7 +195,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     m_cell_mass[cell] = m_euler_volume[cell] * density_nplus1;
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell; 
-      index_env = ev.environmentId();  
+      Integer index_env = ev.environmentId();  
       m_cell_mass[ev] = m_mass_fraction[ev] * m_cell_mass[cell];
       // recuperation de la pseudo projetee
       // m_pseudo_viscosity[ev] = m_u_lagrange[cell][3 * nb_env + 4] / vol;
@@ -218,7 +218,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell;
-      index_env = ev.environmentId();  
+      Integer index_env = ev.environmentId();  
 
       if (m_density[ev] < 0. || m_internal_energy[ev] < 0.) {
         pinfo() << " cell " << cell.localId() << " --energy ou masse negative pour l'environnement "
@@ -297,6 +297,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       }
     }
   }
+  PROF_ACC_END;
 }
 /**
  *******************************************************************************

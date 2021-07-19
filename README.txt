@@ -76,7 +76,8 @@ rm -rf build
 mkdir build
 cd build
 # Build with makefiles in parallel
-cmake ..  -DWANT_CUDA=TRUE -DCMAKE_BUILD_TYPE=Debug -DArcane_ROOT=/your/path/to/installed/arcane -DCMAKE_CUDA_COMPILER=/chemin/vers/bin/nvcc
+cmake ..  -DWANT_CUDA=TRUE -DWANT_PROF_ACC=FALSE -DCMAKE_BUILD_TYPE=Debug -DArcane_ROOT=/your/path/to/installed/arcane -DCMAKE_CUDA_COMPILER=/chemin/vers/bin/nvcc
+[Pour profiling avec nvtx : -DWANT_PROF_ACC=TRUE]
 #cmake ..  
 cmake --build . -- -j16
 # Build with Ninja (natively parallel)
@@ -86,4 +87,12 @@ cmake --build . --target test
 
 Execution sur une machine avec accélérateur :
  /chemin/vers/build/src/Mahyco -A,AcceleratorRuntime=cuda Donnees.arc
+
+Execution avec instrumentation nsys [si projet configuré avec
+-DWANT_PROF_ACC=TRUE, prise en compte des points d'entrée] :
+ nsys profile --stats=true --force-overwrite true -o mahyco /chemin/vers/build/src/Mahyco -A,AcceleratorRuntime=cuda Donnees.arc
+
+Exécution avec instrumentation nvprof (sortie ASCII dans mahyco.lognvprof) 
+[si projet configuré avec -DWANT_PROF_ACC=TRUE, prise en compte des points d'entrée] :
+ nvprof --print-api-trace --print-gpu-trace --log-file mahyco.lognvprof /chemin/vers/build/src/Mahyco -A,AcceleratorRuntime=cuda Donnees.arc
 

@@ -19,9 +19,13 @@ using namespace Arcane::Materials;
 void MahycoModule::
 accBuild()
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
+
   info() << "Using MaHyCo with accelerator";
   IApplication* app = subDomain()->application();
   initializeRunner(m_runner,traceMng(),app->acceleratorRuntimeInitialisationInfo());
+
+  PROF_ACC_END;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -30,6 +34,8 @@ accBuild()
 void MahycoModule::
 hydroStartInit()
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
+
   m_connectivity_view.setMesh(this->mesh());
 
    IParallelMng* m_parallel_mng = subDomain()->parallelMng();
@@ -140,6 +146,8 @@ hydroStartInit()
     volume /= m_dimension;
     m_cell_volume[icell] = volume;
   }
+  
+  PROF_ACC_END;
 }
 
 /**
@@ -154,6 +162,7 @@ hydroStartInit()
 void MahycoModule::
 computeCellMass()
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeCellMass()";
   ENUMERATE_CELL(icell, allCells()){
     Cell cell = * icell;
@@ -167,6 +176,7 @@ computeCellMass()
       m_cell_mass[ev] = m_mass_fraction[ev] * m_cell_mass[cell];
     }
   }
+  PROF_ACC_END;
 }
 /**
  *******************************************************************************
@@ -180,6 +190,7 @@ computeCellMass()
 void MahycoModule::
 computeNodeMass() 
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeNodeMass()";
    // Initialisation ou reinitialisation de la masse nodale
   m_node_mass.fill(0.);
@@ -192,6 +203,7 @@ computeNodeMass()
     }
   }
   m_node_mass.synchronize();
+  PROF_ACC_END;
 }
 /**
  *******************************************************************************
@@ -206,6 +218,7 @@ computeNodeMass()
 void MahycoModule::
 hydroContinueInit()
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
   if (subDomain()->isContinue()) {
     
     debug() << " Entree dans hydroContinueInit()";
@@ -224,12 +237,14 @@ hydroContinueInit()
     // mise a jour nombre iteration 
     m_global_iteration = m_global_iteration() +1;
   }
+  PROF_ACC_END;
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 void MahycoModule::
 saveValuesAtN()
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans saveValuesAtN()";
 
   // le pas de temps a été mis a jour a la fin dunpas de temps precedent et arcanne met dans m_global_old_deltat ce pas de temps ?
@@ -271,6 +286,7 @@ saveValuesAtN()
   if (!options()->sansLagrange) m_velocity_n.copy(m_velocity);
   if (options()->withProjection && options()->remap()->isEuler()) m_node_coord.copy(m_node_coord_0);
  
+  PROF_ACC_END;
 }    
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -279,6 +295,7 @@ void MahycoModule::
 computeArtificialViscosity()
 {
   if (options()->sansLagrange) return;
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeArtificialViscosity()";
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
@@ -311,6 +328,7 @@ computeArtificialViscosity()
       }
     }
   }
+  PROF_ACC_END;
 }
 /**
  *******************************************************************************
@@ -326,8 +344,10 @@ computeArtificialViscosity()
 void MahycoModule::
 updateVelocity()
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
   if (options()->sansLagrange) {
     updateVelocityWithoutLagrange();
+    PROF_ACC_END;
     return;
   }
   
@@ -367,6 +387,7 @@ updateVelocity()
   }
 
   m_velocity.synchronize();
+  PROF_ACC_END;
 }
 /**
  *******************************************************************************
@@ -382,6 +403,7 @@ void MahycoModule::
 updateVelocityBackward()
 {
   if (options()->sansLagrange) return;
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans updateVelocityBackward()";
   // Remise à zéro du vecteur des forces.
   m_force.fill(Real3::null());
@@ -410,6 +432,7 @@ updateVelocityBackward()
 
   m_velocity_n.synchronize();
   
+  PROF_ACC_END;
 }
 /*******************************************************************************
  * \file updateVelocityForward()
@@ -424,6 +447,7 @@ void MahycoModule::
 updateVelocityForward()
 {
   if (options()->sansLagrange) return;
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans updateVelocityForward()";
   // Remise à zéro du vecteur des forces.
   m_force.fill(Real3::null());
@@ -450,6 +474,7 @@ updateVelocityForward()
     out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode]) * in_force[snode];;
   }
   m_velocity.synchronize();
+  PROF_ACC_END;
 }
 /**
  *******************************************************************************
@@ -463,6 +488,7 @@ updateVelocityForward()
 void MahycoModule::
 updateVelocityWithoutLagrange()
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
   bool option(options()->casModel()->hasReverseOption());
   Real factor(options()->casModel()->getReverseParameter());
   
@@ -479,6 +505,7 @@ updateVelocityWithoutLagrange()
   }
 
   m_velocity.synchronize();
+  PROF_ACC_END;
 }
 /**
  *******************************************************************************
@@ -492,6 +519,7 @@ updateVelocityWithoutLagrange()
 void MahycoModule::
 updatePosition()
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans updatePosition()";
   Real deltat = m_global_deltat();
   ENUMERATE_NODE(inode, allNodes()){
@@ -507,6 +535,7 @@ updatePosition()
       somme += m_node_coord[inode];
     m_cell_coord[cell] = one_over_nbnode * somme;
   }
+  PROF_ACC_END;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -515,6 +544,7 @@ updatePosition()
 void MahycoModule::
 applyBoundaryCondition()
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans applyBoundaryCondition()";
   for (Integer i = 0, nb = options()->boundaryCondition.size(); i < nb; ++i){
     String NomBC = options()->boundaryCondition[i]->surface;
@@ -548,6 +578,7 @@ applyBoundaryCondition()
       }
     }
   }
+  PROF_ACC_END;
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -555,6 +586,7 @@ applyBoundaryCondition()
 void MahycoModule::
 InitGeometricValues()
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans InitGeometricValues() ";
   ENUMERATE_NODE(inode, allNodes()){
       m_node_coord_0[inode] = m_node_coord[inode];
@@ -592,6 +624,7 @@ InitGeometricValues()
             / (m_face_coord[face]-m_cell_coord[icell]).abs();
     }
   }
+  PROF_ACC_END;
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -599,6 +632,7 @@ InitGeometricValues()
 void MahycoModule::
 computeGeometricValues()
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << my_rank << " : " << " Entree dans computeGeometricValues() ";
   // Copie locale des coordonnées des sommets d'une maille
   Real3 coord[8];
@@ -717,6 +751,7 @@ computeGeometricValues()
       }
     }
   }
+  PROF_ACC_END;
 }
 /**
  *******************************************************************************
@@ -735,6 +770,7 @@ void MahycoModule::
 updateDensity()
 {
   if (options()->sansLagrange) return;
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << my_rank << " : " << " Entree dans updateDensity() ";
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
@@ -768,6 +804,7 @@ updateDensity()
   m_density.synchronize();
   m_tau_density.synchronize();
   m_div_u.synchronize();
+  PROF_ACC_END;
 }
 /**
  *******************************************************************************
@@ -784,6 +821,7 @@ updateDensity()
 void MahycoModule::
 updateEnergyAndPressure()
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
   if (options()->withNewton) 
     updateEnergyAndPressurebyNewton();
   else
@@ -812,6 +850,7 @@ updateEnergyAndPressure()
     }
     computePressionMoyenne();
   }
+  PROF_ACC_END;
 }
 /*
  *******************************************************************************
@@ -819,6 +858,7 @@ updateEnergyAndPressure()
 void MahycoModule::updateEnergyAndPressurebyNewton()  {  
     
   if (options()->sansLagrange) return;
+  PROF_ACC_BEGIN(__FUNCTION__);
     debug() << " Entree dans updateEnergyAndPressure()";
     bool csts = options()->schemaCsts();
     bool pseudo_centree = options()->pseudoCentree();
@@ -918,6 +958,7 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
         }
       }
     }
+  PROF_ACC_END;
 }
 
 /*
@@ -927,6 +968,7 @@ void MahycoModule::
 updateEnergyAndPressureforGP()
 {
   if (options()->sansLagrange) return;
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans updateEnergyAndPressure()";
   bool csts = options()->schemaCsts();
   bool pseudo_centree = options()->pseudoCentree();
@@ -981,6 +1023,7 @@ updateEnergyAndPressureforGP()
       }
     }
   }
+  PROF_ACC_END;
 }   
 /**
  *******************************************************************************
@@ -995,6 +1038,7 @@ void MahycoModule::
 computePressionMoyenne()
 {
   if (options()->sansLagrange) return;
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computePressionMoyenne() ";
   // maille mixte
   // moyenne sur la maille
@@ -1012,6 +1056,7 @@ computePressionMoyenne()
       }
     }
   }
+  PROF_ACC_END;
 }     
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -1019,6 +1064,7 @@ computePressionMoyenne()
 void MahycoModule::
 computeDeltaT()
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans compute DT avec " << m_global_old_deltat()
          << " et " << options()->deltatInit()
          << " et " << m_global_deltat()
@@ -1105,6 +1151,7 @@ computeDeltaT()
   debug() << " finish " << finish;
   debug() << " too_much " << too_much;
   
+  PROF_ACC_END;
 }
 
 
