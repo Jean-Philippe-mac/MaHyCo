@@ -141,9 +141,7 @@ hydroStartInit()
 
     auto in_node_coord = ax::viewIn(command,m_node_coord);
     auto in_cell_cqs   = ax::viewIn(command,m_cell_cqs);
-    // TODO : impossible d'utiliser m_cell_volume.globalVariable() car ce tableau n'est pas alloué dans la mémoire unifiée
-    // on utilise m_cell_volume_g (g = global) à la place
-    auto out_cell_volume_g        = ax::viewInOut(command,m_cell_volume_g); 
+    auto out_cell_volume_g  = ax::viewInOut(command,m_cell_volume.globalVariable()); 
 
     auto cnc = m_connectivity_view.cellNode();
 
@@ -165,10 +163,6 @@ hydroStartInit()
       volume *= inv_dim;
       out_cell_volume_g[cid] = volume;
     };
-  }
-  // NOTE : en attendant que les variables aux environnements soient traitées sur accélérateur
-  ENUMERATE_CELL(icell, allCells()){
-    m_cell_volume[icell] = m_cell_volume_g[icell];
   }
   
   PROF_ACC_END;
@@ -732,7 +726,7 @@ computeGeometricValues()
         }
         volume /= m_dimension;
 
-        m_cell_volume_g[cell] = volume;
+        m_cell_volume[cell] = volume;
       }
       // Calcule la longueur caractéristique de la maille.
       {
@@ -774,9 +768,7 @@ computeGeometricValues()
 
       auto in_node_coord = ax::viewIn(command,m_node_coord);
       auto in_cell_cqs   = ax::viewIn(command,m_cell_cqs);
-      // TODO : impossible d'utiliser m_cell_volume.globalVariable() car ce tableau n'est pas alloué dans la mémoire unifiée
-      // on utilise m_cell_volume_g (g = global) à la place
-      auto out_cell_volume_g        = ax::viewInOut(command,m_cell_volume_g); 
+      auto out_cell_volume_g        = ax::viewInOut(command,m_cell_volume.globalVariable()); 
       auto out_caracteristic_length = ax::viewOut(command,m_caracteristic_length);
       
       auto cnc = m_connectivity_view.cellNode();
@@ -815,7 +807,6 @@ computeGeometricValues()
   CellToAllEnvCellConverter all_env_cell_converter(mm);
   ENUMERATE_CELL(icell, allCells()){
     Cell cell = * icell;
-    m_cell_volume[cell] = m_cell_volume_g[icell];
     AllEnvCell all_env_cell = all_env_cell_converter[cell];
     if (all_env_cell.nbEnvironment() !=1) {
       ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
