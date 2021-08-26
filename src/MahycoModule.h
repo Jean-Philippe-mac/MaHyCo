@@ -122,14 +122,28 @@ class MahycoModule
 {
  public:
   /** Constructeur de la classe */
-  MahycoModule(const ModuleBuildInfo& mbi)
-    : ArcaneMahycoObject(mbi) {}
+  MahycoModule(const ModuleBuildInfo& mbi);
   /** Destructeur de la classe */
   ~MahycoModule() {}
   
   struct interval {
     double inf, sup;
   };
+
+  // Note: il faut mettre ce champs statique si on veut que sa valeur
+  // soit correcte lors de la capture avec CUDA (sinon on passe par this et
+  // cela provoque une erreur mémoire)
+  static const Integer MAX_NODE_CELL = 8;
+
+  // les paramètres pour appliquer les conditions aux limites sur des noeuds de bord
+  struct BoundaryCondition
+  {
+    NodeGroup nodes; //!< le groupe de noeuds sur lequel s'applique la CL
+    NodeVectorView boundary_nodes; //!< vue relative à ce groupe de noeuds
+    Real value; //!< la valeur appliquée à la composante de vitesse
+    TypesMahyco::eBoundaryCondition type; //!< le type de CL
+  };
+
  public:
 
   //! Initialise l'environnement pour les accélérateurs
@@ -200,7 +214,18 @@ class MahycoModule
    */
   virtual void computeArtificialViscosity();
   
-		
+  /**
+   * Calcul générique de m_force et de v_velocity_out
+   * Remarque : cette méthode ne peut pas être private ou protected
+   * car elle déporte du calcul sur accélérateur
+   */
+  void updateForceAndVelocity(Real dt,
+      const MaterialVariableCellReal& v_pressure,
+      const MaterialVariableCellReal& v_pseudo_viscosity,
+      const VariableCellArrayReal3& v_cell_cqs,
+      const VariableNodeReal3& v_velocity_in,
+      VariableNodeReal3& v_velocity_out);
+
   /**
    * Calcule la force (\c m_force) qui s'applique aux noeuds en
    * ajoutant l'éventuelle contribution de la pseudo-viscosité. Calcule 
@@ -290,7 +315,16 @@ class MahycoModule
    * Ce point d'entrée calcule la pression moyenne dans la maille.
    */
   virtual void computePressionMoyenne();
-		
+	
+  /**
+   * Calcul d'un pas de temps à partir des grandeurs hydrodynamiques
+   * et affectation d'informations sur la maille qui fait le pas de temps
+   *
+   * \return Valeur du pas de temps hydro
+   */
+  template<typename DtCellInfoType>
+  Real computeHydroDeltaT(DtCellInfoType &dt_cell_info);
+
   /**
    * Détermine la valeur du pas de temps pour l'itération suivante. 
    * Le pas de temps est contraint par :
@@ -354,9 +388,26 @@ class MahycoModule
    * La méthode utilisée est celle du découpage en quatre triangles.
    * Méthode appelée par le point d'entrée \c computeGeometricValues()
    */
-  inline void computeCQs(Real3 node_coord[8],Real3 face_coord[6],const Cell& cell);
+  ARCCORE_HOST_DEVICE inline void computeCQs(Real3 node_coord[8],Real3 face_coord[6],Span<Real3> out_cqs);
   
   // inline void computeCQsSimd(SimdReal3 node_coord[8],SimdReal3 face_coord[6],SimdReal3 cqs[8]);
+
+  /**
+   * Permet la lecture des cqs quand on boucle sur les noeuds
+   */
+  void _computeNodeIndexInCells();
+
+  /**
+   * A appeler par hydroStartInit et par hydroContinueInit pour préparer les
+   * données pour les accélérateurs
+   */
+  void _initMeshForAcc();
+
+  /** Les listes de faces XMIN, XMAX, YMIN ... doivent être construites au
+   *  préalable par un appel à PrepareFaceGroup()
+   */
+  void _initBoundaryConditionsForAcc();
+
   /**
    * Fonctions diverses
    **/
@@ -397,10 +448,14 @@ class MahycoModule
   Integer my_rank;
   Integer m_dimension;
  
+  //! Indice de chaque noeud dans la maille
+  UniqueArray<Int16> m_node_index_in_cells;
+
   // Pour l'utilisation des accélérateurs
   ax::Runner m_runner;
 
   UnstructuredMeshConnectivityView m_connectivity_view;
+  UniqueArray<BoundaryCondition> m_boundary_conditions;
 };
 
 #endif

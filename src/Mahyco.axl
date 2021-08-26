@@ -67,9 +67,6 @@
   <!-- FORCE	 -->
   <variable field-name="force" name="Force" data-type="real3" item-kind="node"
 	    dim="0" dump="false" need-sync="false" />
-    <!-- NODEVOLUME	 -->
-    <variable field-name="node_volume" name="NodeVolum" data-type="real" item-kind="node"
-	      dim="0" dump="false" need-sync="false" />
   <!-- 	VELOCITY OLD N	 -->
   <variable field-name="velocity_n" name="VelocityN" data-type="real3" item-kind="node"
 	    dim="0" dump="true" need-sync="true" />
