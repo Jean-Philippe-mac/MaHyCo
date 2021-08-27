@@ -34,6 +34,9 @@
 #include "arcane/cea/NodeDirectionMng.h"
 #include "arcane/cea/CartesianConnectivity.h"
 
+#include "AcceleratorUtils.h"
+
+
 using namespace Arcane;
 using namespace Arcane::Materials;
 
@@ -57,6 +60,9 @@ public:
   ICartesianMesh* m_cartesian_mesh;
 
 public:
+  
+  virtual void initGpu();
+  
    /**
    * main du remap
    **/
@@ -89,6 +95,10 @@ private:
   
   
   Real m_arithmetic_thresold = 1.e-300;
+  
+  // Pour l'utilisation des accélérateurs
+  ax::Runner m_runner;
+  
   
 };
 
