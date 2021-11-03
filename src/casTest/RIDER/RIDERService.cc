@@ -44,7 +44,7 @@ void RIDERService::initMat(Integer dim)  {
     
     if (rmax < rb) {
       // maille pure de bulle
-    m_materiau[cell] = 1;
+      m_materiau[cell] = 1;
     } else if ((rmax >= rb) && (rmin < rb)) {
       double frac_b = (rb - rmin) / (rmax - rmin);
       m_materiau[cell] = frac_b;
@@ -97,6 +97,15 @@ void RIDERService::initVarMono(Integer dim)  {
     }
     m_fracvol[cell] = 1.;
     m_mass_fraction[cell] = 1.;
+    
+    
+    
+    // vitesse eucclhy
+    m_cell_velocity[cell] = {0.0, 0.0, 0.0};   
+    if ( options()->casTest == MonoRiderTx) m_cell_velocity[cell].x = 1.;
+    if ( options()->casTest == MonoRiderTy) m_cell_velocity[cell].y = 1.;
+    if ( options()->casTest == MonoRiderT45) m_cell_velocity[cell]= {1.0, 1.0, 0.0};  
+    
   }
   ENUMERATE_NODE(inode, allNodes()){
     m_velocity[inode] = {0.0, 0.0, 0.0};    

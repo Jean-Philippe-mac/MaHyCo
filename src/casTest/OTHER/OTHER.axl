@@ -129,6 +129,14 @@
 			dim="0"
 			dump="true"
 			need-sync="true" />
+        <variable 
+            field-name="cell_velocity" 
+            name="CellVelocity" 
+            data-type="real3" 
+            item-kind="cell" 
+            dim="0" 
+            dump="true" 
+            need-sync="true" />
 	</variables>
 
 <options>

@@ -16,7 +16,8 @@ void MahycoModule::
 computeFaceQuantitesForRemap()
 {
   debug() << " Entree dans computeFaceQuantitesForRemap()";
-  bool csts = options()->schemaCsts();  
+  bool not_vnr(false);
+  if(options()->getSchema() == "csts" || options()->getSchema() == "eucclhyd" ) not_vnr = true;
   Real one_over_nbnode = m_dimension == 2 ? .5  : .25 ;
   if (m_dimension == 3) {
     ENUMERATE_FACE (iFace, allFaces()) {
@@ -43,7 +44,7 @@ computeFaceQuantitesForRemap()
     m_face_coord[face]=0.;
     for (Integer inode = 0; inode < face.nbNode(); ++inode) {
         m_face_coord[face] +=  one_over_nbnode * m_node_coord[face.node(inode)];
-        if (csts)
+        if (not_vnr)
         vitesse_moy += 0.5 * (m_velocity[face.node(inode)] + m_velocity_n[face.node(inode)]);
         else
         vitesse_moy += m_velocity[face.node(inode)];
@@ -90,8 +91,8 @@ computeFaceQuantitesForRemap()
  */
 void MahycoModule::computeVariablesForRemap()
 {
-  debug() << " Entree dans computeVariablesForRemap()";
   Integer nb_total_env = mm->environments().size();
+  info() << " Entree dans computeVariablesForRemap()" << nb_total_env;
   Integer index_env;
 
   m_u_lagrange.fill(0.);
@@ -109,15 +110,13 @@ void MahycoModule::computeVariablesForRemap()
       // // energies matériels (partiels)
       m_u_lagrange[cell][2 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_internal_energy[ev];
       // // Quantites de mouvement centrees
-      m_u_lagrange[cell][3 * nb_total_env + 0] = 0.;
-      m_u_lagrange[cell][3 * nb_total_env + 1] = 0.;
-      m_u_lagrange[cell][3 * nb_total_env + 2] = 0.;
+      m_u_lagrange[cell][3 * nb_total_env + 0] = m_cell_mass[cell] * m_cell_velocity[cell].x;
+      m_u_lagrange[cell][3 * nb_total_env + 1] = m_cell_mass[cell] * m_cell_velocity[cell].y;
+      m_u_lagrange[cell][3 * nb_total_env + 2] = m_cell_mass[cell] * m_cell_velocity[cell].z;
       // // energie cinetique centree
-      m_u_lagrange[cell][3 * nb_total_env + 3] = 0.;
+      m_u_lagrange[cell][3 * nb_total_env + 3] = 0.5 * m_cell_mass[cell] * m_cell_velocity[cell].abs2();
       // // Pseudo partiel pour la quantité de mouvement
-      m_u_lagrange[cell][3 * nb_total_env + 4] = m_cell_volume[ev] * m_pseudo_viscosity[ev];
-//       if (cell.localId() == 754) info() << cell.localId() << " pseudo avant proj " << m_pseudo_viscosity[ev] 
-//            << " ul " << m_u_lagrange[cell][3 * nb_total_env + 4] << " " << index_env;
+      m_u_lagrange[cell][3 * nb_total_env + 4] = m_cell_volume[cell] * m_pseudo_viscosity[cell];
       
       if (options()->remap()->hasProjectionPenteBorne() == 1) {     
         // Cell cell = ev.globalCell();
@@ -125,12 +124,11 @@ void MahycoModule::computeVariablesForRemap()
         m_phi_lagrange[cell][nb_total_env + index_env] = m_density[ev];
         m_phi_lagrange[cell][2 * nb_total_env + index_env] = m_internal_energy[ev];
         // les phi sur la vitesse et energie cinétique n'existent pas en VnR
-        m_phi_lagrange[cell][3 * nb_total_env + 0] = 0.;
-        m_phi_lagrange[cell][3 * nb_total_env + 1] = 0.;
-        m_phi_lagrange[cell][3 * nb_total_env + 2] = 0.;
-        m_phi_lagrange[cell][3 * nb_total_env + 3] = 0.;
-        
-        m_phi_lagrange[cell][3 * nb_total_env + 4] = m_pseudo_viscosity[ev];
+        m_phi_lagrange[cell][3 * nb_total_env + 0] = m_cell_velocity[cell].x;
+        m_phi_lagrange[cell][3 * nb_total_env + 1] =  m_cell_velocity[cell].y;
+        m_phi_lagrange[cell][3 * nb_total_env + 2] =  m_cell_velocity[cell].z;
+        m_phi_lagrange[cell][3 * nb_total_env + 3] = m_cell_velocity[cell].abs2(); 
+        m_phi_lagrange[cell][3 * nb_total_env + 4] = m_pseudo_viscosity[cell];
       } else {
         for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {
           m_phi_lagrange[cell][ivar] = m_u_lagrange[cell][ivar] / m_cell_volume[cell];
@@ -180,12 +178,12 @@ void MahycoModule::remap() {
     
     Integer withDualProjection = 0;
     // passage des vitesse de n+1/2 à n+1 pour la projection
-    if (options()->schemaCsts()) updateVelocityForward();
+    if (options()->getSchema() == "csts") updateVelocityForward();
     if (!options()->sansLagrange) withDualProjection = 1;
     
     computeVariablesForRemap();
     computeFaceQuantitesForRemap();
-    
+
     options()->remap()->appliRemap(m_dimension, withDualProjection, m_nb_vars_to_project, m_nb_env);
     
     // reinitialisaiton des variables (à l'instant N) pour eviter des variables non initialisees

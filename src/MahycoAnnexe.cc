@@ -36,11 +36,8 @@ void MahycoModule::hydroStartInitEnvAndMat()
     IMeshEnvironment* env = mm->createEnvironment(env_build);
     info() << "Environment cree";
     saved_envs.add(env);
-    // Le bloc ne contient que 2 milieux
-    if (i<2){
-      info() << "Add environment " << env_name << " to block1";
-      mbbi.addEnvironment(env);
-    }
+    info() << "Add environment " << env_name << " to block1";
+    mbbi.addEnvironment(env);
   }
   
   
@@ -63,6 +60,14 @@ void MahycoModule::hydroStartInitEnvAndMat()
   m_is_dir_face.resize(3); // dimension 3
   m_outer_face_normal.resize(6); // dimension 6 faces par mailles
   
+  m_node_fracvol.resize(m_nb_env);
+  m_lpc.resize(4); // nombre de cellules aux noeuds
+  m_lplus.resize(4); // nombre de cellules aux noeuds
+  m_nplus.resize(4); // nombre de cellules aux noeuds
+  m_lminus.resize(4); // nombre de cellules aux noeuds
+  m_nminus.resize(4); // nombre de cellules aux noeuds
+  m_cell_velocity_extrap.resize(4); // nombre de cellules aux noeuds
+  m_pressure_extrap.resize(4); // nombre de cellules aux noeuds
   options()->remap()->resizeRemapVariables(m_nb_vars_to_project, m_nb_env);
   
   Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
@@ -100,7 +105,7 @@ void MahycoModule::hydroStartInitEnvAndMat()
       mat_indexes[0].add(icell.itemLocalId());
       mat_indexes[1].add(icell.itemLocalId());
     }
-        
+
   }
 
   info() << " Ajout de mailles mixtes " ;
@@ -116,7 +121,7 @@ void MahycoModule::hydroStartInitEnvAndMat()
    }
   }
  
-  
+ 
 }
 /**
  *******************************************************************************

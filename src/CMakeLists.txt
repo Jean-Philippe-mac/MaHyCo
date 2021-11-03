@@ -4,6 +4,7 @@ include(../mahyco.common.cmake)
 
 target_sources(${EXAMPLE_NAME} PRIVATE MahycoAnnexe.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE PrepareRemap.cc)
+target_sources(${EXAMPLE_NAME} PRIVATE Eucclhyd.cc)
 
 add_library(PerfectGas eos/perfectgas/PerfectGasEOSService.cc)
 target_include_directories(PerfectGas PUBLIC .)
@@ -12,7 +13,6 @@ target_link_libraries(PerfectGas PUBLIC arcane_core)
 add_library(StiffenedGas eos/stiffenedgas/StiffenedGasEOSService.cc)
 target_include_directories(StiffenedGas PUBLIC .)
 target_link_libraries(StiffenedGas PUBLIC arcane_core)
-
 
 add_library(RIDER casTest/RIDER/RIDERService.cc)
 target_include_directories(RIDER PUBLIC .)
@@ -30,6 +30,9 @@ add_library(OTHER casTest/OTHER/OTHERService.cc)
 target_include_directories(OTHER PUBLIC .)
 target_link_libraries(OTHER PUBLIC arcane_core)
 
+add_library(POINTTRIPLE casTest/POINTTRIPLE/POINTTRIPLEService.cc)
+target_include_directories(POINTTRIPLE PUBLIC .)
+target_link_libraries(POINTTRIPLE PUBLIC arcane_core)
 
 add_library(Remap Remap/RemapADIService.cc Remap/RemapALEService.cc Remap/Remap-ordre-3.cc Remap/UtilesRemap.cc Remap/RemapADIFinal.cc Remap/UtilesRemapALE.cc Remap/DualPhaseRemap.cc)
 target_include_directories(Remap PUBLIC .)
@@ -37,12 +40,13 @@ target_link_libraries(Remap PUBLIC arcane_core)
 
 
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas RIDER SOD SEDOV OTHER Remap)
+target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas RIDER SOD SEDOV OTHER POINTTRIPLE Remap)
 
 arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
 arcane_target_add_axl(SOD casTest/SOD/SOD)
 arcane_target_add_axl(SEDOV casTest/SEDOV/SEDOV)
 arcane_target_add_axl(OTHER casTest/OTHER/OTHER)
+arcane_target_add_axl(POINTTRIPLE casTest/POINTTRIPLE/POINTTRIPLE)
 
 arcane_target_add_axl(PerfectGas eos/perfectgas/PerfectGasEOS)
 arcane_target_add_axl(StiffenedGas eos/stiffenedgas/StiffenedGasEOS)

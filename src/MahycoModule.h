@@ -276,6 +276,10 @@ class MahycoModule
    * Cacul de l'energie et de la pression par une méthode directe pour les gaz parfait
    **/
   virtual void updateEnergyAndPressureforGP();
+  /**
+   * Ce point d'entrée calcule la pression et la vitesse du son par materiau
+   */
+  virtual void computeEOS();
     /**
    * Ce point d'entrée calcule la pression moyenne dans la maille.
    */
@@ -336,6 +340,20 @@ class MahycoModule
  
   /** Retourne le numéro de version du module */
   virtual VersionInfo versionInfo() const { return VersionInfo(1,0,0); }
+  
+  
+  /** schema Eucclhyd */
+  virtual void computeCornerNormal();
+  virtual void computeGradients();
+  virtual void computeDissipationMatrix();
+  virtual void extrapolateValue();
+  virtual void computeG();
+  virtual void computeNodeDissipationMatrix();
+  virtual void computeNodeVelocity();
+  virtual void computeLagrangePosition();
+  virtual void computeSubCellForce();
+  virtual void computeLagrangeVolumeAndCenterOfGravity();
+  virtual void updateCellCenteredLagrangeVariables();
   
  private:
   

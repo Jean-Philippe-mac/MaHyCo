@@ -37,10 +37,9 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
     }
     NodeGroup Nodes_to_relax = mesh()->nodeFamily()->findGroup("NodeToRelax");
     
-    pinfo() << " Calcul des volumes anciens et nouveau et des volumes partiels";
+    //pinfo() << " Calcul des volumes anciens et nouveau et des volumes partiels";
     // Calcul des volumes anciens et nouveau et des volumes partiels
     computeVolumes();
-    pinfo() << " Calcul des flux";
     // Calcul des flux de volumes 
     computeFlux();
     
@@ -76,6 +75,8 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
           m_phi[cell][nb_env+index_env] = m_density_l[ev] * m_fracvol_l[ev];
           // energie env
           m_phi[cell][2*nb_env+index_env] = m_internal_energy[ev] * m_density_l[ev] * m_fracvol_l[ev];
+          // pseudo-viscosite moyenne
+          m_phi[cell][3*nb_env+4] = m_pseudo_viscosity[cell];
         }
      }
      ENUMERATE_CELL(icell, allCells()){
@@ -85,7 +86,7 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
        // Vitesse X
        m_phi[cell][3*nb_env+1] =  0.25 * (m_velocity_l[cell.node(0)].x + m_velocity_l[cell.node(1)].x + 
          m_velocity_l[cell.node(2)].x + m_velocity_l[cell.node(3)].x);
-       // Vitesse X
+       // Vitesse Yfile:///home/perlatj/MAHYCO_ARCANE/MaHyCo/src/casTest/OTHER/OTHER.axlfile:///home/perlatj/MAHYCO_ARCANE/MaHyCo/src/casTest/OTHER/OTHERService.ccfile:///home/perlatj/MAHYCO_ARCANE/MaHyCo/src/casTest/OTHER/OTHERService.hfile:///home/perlatj/MAHYCO_ARCANE/MaHyCo/src/casTest/OTHER/OTHERService.h
        m_phi[cell][3*nb_env+2] =  0.25 * (m_velocity_l[cell.node(0)].y + m_velocity_l[cell.node(1)].y + 
          m_velocity_l[cell.node(2)].y + m_velocity_l[cell.node(3)].y);
        // energie cinetique
@@ -140,20 +141,20 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
     // il reste à mettre fravol[cell] à 1 et à remettre m_phi à zero
     ENUMERATE_CELL(icell,allCells()){
       Cell c = *icell;
-      for (Integer index_env=0; index_env < nb_env ; index_env++) 
-        m_phi[c][index_env] = 0.;
+      //for (Integer index_env=0; index_env < nb_env ; index_env++) 
+      //  m_phi[c][index_env] = 0.;
       m_fracvol[c] =1.;  
     }
     // 
-    
+ 
     m_appro_phi.fill(0.0);
-    pinfo() << " Projection de la masse par envirronement " ;
+    // pinfo() << " Projection de la masse par envirronement " ;
     /************************************************************/
     for (Integer index_env=0; index_env < nb_env ; index_env++) { 
       IMeshEnvironment* env = mm->environments()[index_env];
-      pinfo() << " Projection de la masse pour l'envirronement " << env->name();
+      // pinfo() << " Projection de la masse pour l'envirronement " << env->name();
     
-      
+ 
       computeApproPhi(nb_env+index_env, m_cell_volume_partial_l, m_cell_delta_volume);
       m_appro_phi.synchronize();
       // calcul de la masse dans les nouvelles cellules
@@ -166,17 +167,19 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
         for (Integer ii = 0; ii < 4; ++ii) 
           m_appro_density[c][ii] = m_appro_phi[c][ii];
       }
-      
+      // m_phi[cell][nb_env+index_env] contient alpha_i*rho_i
+      // donc on divise par alpha_i pour avoir rho_i
       ENUMERATE_ENVCELL(ienvcell,env){
         EnvCell ev = *ienvcell;
         Cell cell = ev.globalCell();
         m_density[ev] = m_phi[cell][nb_env+index_env] / m_fracvol[ev];
+        // pinfo() << cell.localId() << " : " <<  m_fracvol[ev] << " et " << m_density[ev];
         // pinfo() << env->name() << " projection densité " << cell.localId() << " " << m_density[ev] 
         // << " et " <<  m_fracvol[ev] << " appro phi " << m_appro_density[cell];
       }
       
       m_appro_phi.fill(0.0);
-      pinfo() << " Projection de l'energie pour l'envirronement " << env->name();
+      // pinfo() << " Projection de l'energie pour l'envirronement " << env->name();
       
       computeApproPhi(2*nb_env+index_env, m_cell_volume_partial_l, m_cell_delta_volume);
       m_appro_phi.synchronize();
@@ -186,9 +189,25 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
       ENUMERATE_ENVCELL(ienvcell,env){
         EnvCell ev = *ienvcell;
         Cell cell = ev.globalCell();
-        m_internal_energy[ev] = m_phi[cell][2*nb_env+index_env] / m_phi[cell][nb_env+index_env];  // / m_density[ev] / m_fracvol[ev];
+        if (m_phi[cell][nb_env+index_env] != 0 && m_phi[cell][index_env] != 0.)
+            m_internal_energy[ev] = m_phi[cell][2*nb_env+index_env] / m_phi[cell][nb_env+index_env];
       }
     }
+    
+      
+    m_appro_phi.fill(0.0);
+    // pinfo() << " Projection de la pseudo moyenne ";
+    
+    computeApproPhi(3*nb_env+4, m_cell_volume_partial_l, m_cell_delta_volume);
+    m_appro_phi.synchronize();
+    // calcul des pseudo dans les nouvelles cellules
+    computeNewPhi(3*nb_env+4, m_cell_volume_l, m_cell_new_volume, m_cell_delta_volume);
+        
+    ENUMERATE_CELL(icell, allCells()){
+      Cell cell = * icell;
+      m_pseudo_viscosity[cell] = m_phi[cell][3*nb_env+4];
+    }
+    
     m_appro_phi.fill(0.0);
     if (nb_env >1) { 
       CellToAllEnvCellConverter all_env_cell_converter(mm);
@@ -210,7 +229,8 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
         ENUMERATE_ENVCELL(ienvcell,env) {
           EnvCell ev = *ienvcell;
           Cell cell = ev.globalCell();
-          m_mass_fraction[ev] = m_phi[cell][nb_env+index_env] / m_density[cell];
+          if (m_density[cell] !=0.) 
+            m_mass_fraction[ev] = m_phi[cell][nb_env+index_env] / m_density[cell];
         }
       }
       ENUMERATE_CELL(icell, allCells()){
@@ -242,24 +262,25 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
         m_node_mass[inode] += contrib_node_mass; 
       }
     }
-
     if (withDualProjection) {
       if (nb_env >1) { 
         m_appro_phi.fill(0.0);
-        pinfo() << " Calcul de l'approximation de la densité aux faces m_appro_density " 
-                << " pour la projection de la quantité de mouvement" ;
+        // pinfo() << " Calcul de l'approximation de la densité aux faces m_appro_density " 
+        //       << " pour la projection de la quantité de mouvement" ;
         // on refait la projection de la densité totale pour calculer appro_phi 
         /************************************************************/
  
         computeApproPhi(3*nb_env, m_cell_volume_partial_l, m_cell_delta_volume);
         m_appro_phi.synchronize();
-        // calcul des energie massique dans les nouvelles cellules
+       
         computeNewPhi(3*nb_env, m_cell_volume_l, m_cell_new_volume, m_cell_delta_volume);
         m_appro_density.fill(0.0);
         ENUMERATE_CELL(icell,allCells()) {
             Cell c = *icell;
             for (Integer ii = 0; ii < 4; ++ii) 
             m_appro_density[c][ii] = m_appro_phi[c][ii];
+            
+            // if (c.localId() == 47) pinfo() << " m_appro_phi " << m_appro_density[c] << " et " << m_density_l[c];
         }
       }
       // Calcul des masses partiels et des flux de masses utilisant 
@@ -273,10 +294,11 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
         m_cell_delta_masse[c][ii] =  m_cell_delta_volume[c][ii] * m_appro_density[c][ii];
         m_cell_masse_partial_l[c][ii] = m_cell_volume_partial_l[c][ii] * m_density_l[c];
        }
+       // if (c.localId() == 47) pinfo() << m_cell_delta_masse[c] << " et " << m_cell_delta_volume[c] << " ou " << m_appro_density[c];
       }
       
       m_appro_phi.fill(0.0);
-      pinfo() << " Projection de la vitesse en X";
+      // pinfo() << " Projection de la vitesse en X";
       /************************************************************/
       // Projection de la vitesse X aux mailles
  
@@ -293,16 +315,16 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
       
       ENUMERATE_CELL(icell, allCells()){  
         Cell c = *icell; 
-        for( NodeEnumerator inode(c.nodes()); inode.hasNext(); ++inode){
+        for( NodeEnumerator inode(c.nodes()); inode.hasNext(); ++inode) {
           m_velocity[inode].x += 0.25 * m_phi[icell][3*nb_env+1];
         }
       }
-      ENUMERATE_NODE(inode, allNodes()){
+      ENUMERATE_NODE(inode, allNodes()) {
         Node node= *inode;
         m_velocity[node].x /= m_node_mass[node];
       }  
       m_appro_phi.fill(0.0);
-      pinfo() << " Projection de la vitesse en Y";
+      // pinfo() << " Projection de la vitesse en Y";
       /************************************************************/
       // Projection de la vitesse Y aux mailles
  
@@ -329,6 +351,7 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
         m_velocity[node].y /= m_node_mass[node];
       }    
       pinfo() << " Fin de la Projection";
+   
       
       // récuperation du delta d'nergie cinétique en energie interne
       if (hasConservationEnergieTotale()) {
@@ -339,7 +362,7 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
         m_appro_phi.synchronize();
         // calcul de la masse dans les nouvelles cellules
         computeNewPhi(3*nb_env+3, m_cell_volume_l, m_cell_new_volume, m_cell_delta_volume);
-        
+      } 
         ENUMERATE_CELL(icell,allCells()){
           Cell c = *icell;
           Real ec_proj(0.);
@@ -352,8 +375,6 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
           ec_reconst = 0.5 * (0.25 *(m_velocity[c.node(0)] + m_velocity[c.node(1)] + m_velocity[c.node(2)] + m_velocity[c.node(3)])).abs2();
           delta_ec = std::max( 0., ec_proj - ec_reconst);
           m_internal_energy[c] += delta_ec;
-        }
-    
       }
     }
 }

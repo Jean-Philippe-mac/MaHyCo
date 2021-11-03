@@ -51,6 +51,9 @@ void SEDOVService::initVarMono(Integer dim)  {
     Cell cell = *icell;
     Real rmax(0.);
     bool isCenterCell = false;  
+    // vitesse eucclhyd
+    m_cell_velocity[cell] = {0.0, 0.0, 0.0};  
+    
     m_internal_energy[cell] = e1;
     m_density[cell] = rhoInit;
     m_fracvol[cell] = 1.;
@@ -100,6 +103,9 @@ void SEDOVService::initVar(Integer dim)  {
     Cell cell = *icell;
     Real rmax(0.);
     bool isCenterCell = false;  
+    // vitesse eucclhyd
+    m_cell_velocity[cell] = {0.0, 0.0, 0.0};  
+    
     m_internal_energy[cell] = e1;
     m_density[cell] = rhoInit;
     m_fracvol[cell] = 1.;

@@ -74,6 +74,12 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
         // pour le flux total
         m_back_flux_mass[inode]  +=  0.5 * m_dual_phi_flux[cellb][nb_env+index_env] * outer_face_normal_dirb;
         }
+        if (math::abs(m_back_flux_mass[inode]) > 1.e-12) {
+          info() << " NODE " << inode.localId();
+          info() << " ajout par la maille " << cellb.uniqueId() << " flux env1 " << m_dual_phi_flux[cellb][2] ;
+          info() << " flux env2 " << m_dual_phi_flux[cellb][3] << " outer "<< outer_face_normal_dirb << " avec " << nb_env << " nbenv ";
+          info() << " soit back front " << m_back_flux_mass[inode];
+        }
      }
     }
     Cell cellf = dir_face.nextCell();
@@ -94,6 +100,12 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
         0.5 * m_dual_phi_flux[cellf][nb_env+index_env] * outer_face_normal_dirf;
         // pour le flux total
         m_front_flux_mass[inode] += 0.5 * m_dual_phi_flux[cellf][nb_env+index_env] * outer_face_normal_dirf;
+        }
+        if (math::abs(m_front_flux_mass[inode]) > 1.e-12) {
+          info() << " NODE " << inode.localId();
+          info() << " ajout par la maille " << cellf.uniqueId() << " flux " << m_dual_phi_flux[cellf][2] ;
+          info() << " flux env2 " << m_dual_phi_flux[cellb][3] << " outer " << outer_face_normal_dirf << " avec " << nb_env << " nbenv ";
+          info() << " soit flux front " << m_front_flux_mass[inode];
         }
       }
     }

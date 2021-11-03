@@ -125,6 +125,8 @@ void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_projec
                    -0.5 * idir * (1 - idir)};  
   m_delta_phi_face_av.fill(0.0);
   m_delta_phi_face_ar.fill(0.0);
+  m_grad_phi.fill(0.0);
+  
   FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   if (options()->ordreProjection > 1) {
     ENUMERATE_CELL(icell,allCells()) {

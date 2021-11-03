@@ -230,7 +230,7 @@ saveValuesAtN()
   m_pressure.synchronize();
   m_cell_cqs.synchronize();
   m_velocity.synchronize();
-  
+  m_cell_velocity.synchronize();
   
   ENUMERATE_CELL(icell, allCells()){
     Cell cell = *icell;
@@ -240,6 +240,7 @@ saveValuesAtN()
     m_cell_volume_n[cell] = m_cell_volume[cell];
     m_density_n[cell] = m_density[cell];
     m_internal_energy_n[cell] = m_internal_energy[cell];
+    m_cell_velocity_n[cell] = m_cell_velocity[cell];
   }
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
@@ -256,7 +257,10 @@ saveValuesAtN()
   
   m_cell_cqs_n.copy(m_cell_cqs);
   
-  if (!options()->sansLagrange) m_velocity_n.copy(m_velocity);
+  if (!options()->sansLagrange) {
+      m_velocity_n.copy(m_velocity);
+      m_cell_velocity_n.copy(m_cell_velocity);
+  }
   if (options()->withProjection && options()->remap()->isEuler()) m_node_coord.copy(m_node_coord_0);
  
 }    
@@ -324,7 +328,7 @@ updateVelocity()
   // (qui dans le cas de vnr-csts est la vitesse apres projection du pas de temps précédent donc n),
   // est replacee à n-1/2 pour vnr-csts.
   // Dans le cas de vnr (pas csts) elle est deja en n-1/2
-  if (options()->schemaCsts() && options()->withProjection) updateVelocityBackward();
+  if (options()->getSchema() == "csts" && options()->withProjection) updateVelocityBackward();
       
       
   debug() << " Entree dans updateVelocity()";
@@ -683,9 +687,18 @@ computeGeometricValues()
         {
             m_caracteristic_length[icell] = std::pow(m_cell_volume[icell], racine);
         }
+        else if (options()->longueurCaracteristique() == "min_distance") 
+        {
+            Real dist = (m_node_coord[cell.node(0)]-m_node_coord[cell.node(1)]).abs2();
+            dist = math::min(dist, (m_node_coord[cell.node(1)]-m_node_coord[cell.node(2)]).abs2());
+            dist = math::min(dist, (m_node_coord[cell.node(2)]-m_node_coord[cell.node(3)]).abs2());
+            dist = math::min(dist, (m_node_coord[cell.node(3)]-m_node_coord[cell.node(0)]).abs2());  
+            m_caracteristic_length[icell] = math::sqrt(dist); 
+        } 
         else
         {
-            info() << " pas de longeur caractéritique definie dans le .arc " << options()->longueurCaracteristique(); 
+            info() << " pas de longeur caractéritique definie dans le .arc " 
+            << options()->longueurCaracteristique(); 
             subDomain()->timeLoopMng()->stopComputeLoop(true);
         }
     }
@@ -793,6 +806,13 @@ updateEnergyAndPressure()
     }
   }
   if (! options()->withProjection) {
+   computeEOS();
+  }
+}
+/*
+ *******************************************************************************
+*/
+void MahycoModule::computeEOS() {
     // Calcul de la Pression si on ne fait pas de projection 
     for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
         IMeshEnvironment* ienv = mm->environments()[i];
@@ -800,7 +820,6 @@ updateEnergyAndPressure()
         options()->environment[i].eosModel()->applyEOS(ienv);
     }
     computePressionMoyenne();
-  }
 }
 /*
  *******************************************************************************
@@ -809,7 +828,8 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
     
   if (options()->sansLagrange) return;
     debug() << " Entree dans updateEnergyAndPressure()";
-    bool csts = options()->schemaCsts();
+    bool csts(false);
+    if(options()->getSchema() == "csts") csts=true;
     bool pseudo_centree = options()->pseudoCentree();
     // Calcul de l'énergie interne
     if (!csts) {
@@ -926,7 +946,8 @@ updateEnergyAndPressureforGP()
 {
   if (options()->sansLagrange) return;
   debug() << " Entree dans updateEnergyAndPressure()";
-  bool csts = options()->schemaCsts();
+  bool csts(false);
+  if(options()->getSchema() == "csts") csts=true;
   bool pseudo_centree = options()->pseudoCentree();
   // Calcul de l'énergie interne
   if (!csts) {

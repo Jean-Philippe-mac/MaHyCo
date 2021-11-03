@@ -141,9 +141,60 @@
 	    dim="1" dump="true" need-sync="true" /><!-- 	U REMAP2	 -->
     <variable field-name="outer_face_normal" name="OuterFaceNormal" data-type="real3" item-kind="cell"
 	    dim="1" dump="true" need-sync="true" />
-  </variables>
-
-
+    
+    
+    <!-- Variables Eucclhyd -->
+       <!-- 	PHI DUAL LAGRANGE	 -->
+    <variable field-name="node_fracvol" name="NodeFracVol" data-type="real" item-kind="node"
+	      dim="1" dump="true" need-sync="true" />
+    <!-- 	VELOCITY GRADIENT	 -->
+  <variable field-name="velocity_gradient" name="VelocityGradient" data-type="real3x3" item-kind="cell" dim="0" dump="true" need-sync="true" />
+  <!-- 	NODE FORCE	 -->
+  <variable field-name="node_force" name="NodeForce" data-type="real3" item-kind="node"
+	    dim="1"  dump="true" need-sync="true" />
+   <!-- 	PRESSURE GRADIENT	 -->
+   <variable field-name="pressure_gradient" name="PressureGradient" data-type="real3" item-kind="cell" dim="0" material="true" dump="true" need-sync="true" /> 
+   <!-- LPC	 -->
+  <variable field-name="lpc" name="Lpc" data-type="real3" item-kind="node"	 dim="1" dump="true" need-sync="true" /> 
+    <!-- LPLUS	 -->
+  <variable field-name="lplus" name="Lplus" data-type="real" item-kind="node"
+	    dim="1" dump="true" need-sync="true" /> 
+ <!-- NPLUS	 -->
+  <variable field-name="nplus" name="Nplus" data-type="real3" item-kind="node"
+	    dim="1" dump="true" need-sync="true" /> 
+ <!-- NMINUS	 -->
+  <variable field-name="lminus" name="Lminus" data-type="real" item-kind="node"
+	    dim="1" dump="true" need-sync="true" /> 
+  <!-- NMINUS	 -->
+  <variable field-name="nminus" name="Nminus" data-type="real3" item-kind="node"
+	    dim="1" dump="true" need-sync="true" /> 
+  <!-- MATRICE DISSIPATION	 -->
+  <variable field-name="dissipation_matrix" name="DissipationMatrix" data-type="real3x3" item-kind="node"
+	    dim="1" dump="true" need-sync="true" /> 
+   <!-- 	PRESSURE EXTRAPOLATION	 -->
+   <variable field-name="pressure_extrap" name="PressureExtrap" data-type="real" item-kind="cell" dim="1" material="true" dump="true" need-sync="true" />
+   <!-- 	CELL VELOCITY OLD	 -->
+   <variable field-name="cell_velocity_n" 
+   name="CellVelocityN" data-type="real3" item-kind="cell" dim="0" dump="true" need-sync="true" />
+   <!-- 	CELL VELOCITY 	 -->
+   <variable field-name="cell_velocity" 
+   name="CellVelocity" data-type="real3" item-kind="cell" dim="0" dump="true" need-sync="true" />
+   <!-- 	CELL VELOCITY EXTRAPOLATION	 -->
+   <variable field-name="cell_velocity_extrap" name="CellVelocityExtrap" data-type="real3" item-kind="cell" dim="1" dump="true" need-sync="true" />
+   <!-- 	NODE G	 -->
+   <variable field-name="node_G" name="NodeG" data-type="real3" item-kind="node" dim="0" dump="true" need-sync="true" /> <variable field-name="node_dissipation" name="NodeDisspation" data-type="real3x3" item-kind="node" dim="0" dump="true" need-sync="true" />
+   <!-- 	CELL VELOCITY EXTRAPOLATION	 -->
+   <variable field-name="cell_perimeter" name="CellPerimeter" data-type="real" item-kind="cell" dim="0" dump="true" need-sync="true" />
+   
+    <!-- Variables Eucclhyd -->
+   <!-- 	CELL GAUSSIEN1	 -->
+   <variable field-name="cell_gaussian1" name="CellGaussien1" data-type="real" item-kind="cell" dim="0" dump="true" need-sync="true" />
+   <!-- 	CELL GAUSSIEN2	 -->
+   <variable field-name="cell_gaussian2" name="CellGaussien2" data-type="real" item-kind="cell" dim="0" dump="true" need-sync="true" />
+   <variable field-name="matcell_velocity"  name="MatCellVelocity"  data-type="real3" item-kind="cell" dim="0" 
+   material="true" dump="true" need-sync="true" />
+   </variables>
+  
 <entry-points>
   <entry-point method-name="hydroStartInit" name="HydroStartInit" where="start-init" property="none" />
   <entry-point method-name="hydroContinueInit" name="HydroContinueInit" where="continue-init" property="none" />
@@ -161,6 +212,18 @@
   <entry-point method-name="computePressionMoyenne" name="ComputePressionMoyenne" where="compute-loop" property="none" />
   <entry-point method-name="remap" name="Remap" where="compute-loop" property="none" />
   <entry-point method-name="computeDeltaT" name="ComputeDeltaT" where="compute-loop" property="none" /> 
+  <!-- special eucclhyd -->
+  <entry-point method-name="computeEOS" name="ComputeEOS" where="compute-loop" property="none" />
+  <entry-point method-name="computeGradients" name="ComputeGradients"  where="compute-loop" property="none" />
+  <entry-point method-name="computeDissipationMatrix" name="ComputeDissipationMatrix"  where="compute-loop" property="none" />
+  <entry-point method-name="extrapolateValue" name="ExtrapolateValue"  where="compute-loop" property="none" />
+  <entry-point method-name="computeNodeDissipationMatrix" name="ComputeNodeDissipationMatrix"  where="compute-loop" property="none" />
+  <entry-point method-name="computeNodeVelocity" name="ComputeNodeVelocity"  where="compute-loop" property="none" />
+  <entry-point method-name="computeLagrangePosition" name="ComputeLagrangePosition"  where="compute-loop" property="none" />
+  <entry-point method-name="computeSubCellForce" name="ComputeSubCellForce"  where="compute-loop" property="none" />
+  <entry-point method-name="computeLagrangeVolumeAndCenterOfGravity" name="ComputeLagrangeVolumeAndCenterOfGravity"  where="compute-loop" property="none" />
+  <entry-point method-name="updateCellCenteredLagrangeVariables" name="UpdateCellCenteredLagrangeVariables"  where="compute-loop" property="none" />
+      
 </entry-points>
 
 <options>
@@ -223,17 +286,24 @@
     <description>Service de projection </description>
   </service-instance>
 
-   <!-- - - - schema csts - - - - -->
-  <simple name="schema-csts" type="bool">
+ <!-- - - - schema - - - - -->
+  <simple name="schema" type="string" default="vnr">
     <description>
-     schema CSTS 
+     Schéma Lagrange
     </description>
   </simple>
-
+  
   <!-- - - - options pseudo-centree - - - - -->
   <simple name="pseudo-centree" type="bool">
     <description>
      Option pseudo-centree 
+    </description>
+  </simple>
+  
+  <!-- - - - options pseudo-centree - - - - -->
+  <simple name="ordre-lagrange" type="integer" default="2">
+    <description>
+     Ordre du schéma Lagrange Eucclhy
     </description>
   </simple>
   

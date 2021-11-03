@@ -46,11 +46,15 @@ void OTHERService::initVar(Integer dim)  {
     } 
     m_fracvol[cell] = 1.;
     m_mass_fraction[cell] = 1.;
+    
+    // vitesse eucclhyd
+    m_cell_velocity[cell] = {0.0, 0.0, 0.0};   
+    m_cell_velocity[cell].x = 1.;  
   }
   info() << " boucle sur les noeuds";
   ENUMERATE_NODE(inode, allNodes()){
     m_velocity[inode] = {0.0, 0.0, 0.0};    
-    //m_velocity[inode].x = 1.;  
+    m_velocity[inode].x = 1.;  
     //m_velocity[inode].y = 1.;
     // sauvegarde des valeurs initiales mises dans m_velocity_n
     m_velocity_n[inode] = m_velocity[inode];

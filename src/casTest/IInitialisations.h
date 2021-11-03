@@ -1,4 +1,5 @@
-﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
+﻿
+// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #ifndef IINITIALISATION_H
 #define IINITIALISATION_H
 

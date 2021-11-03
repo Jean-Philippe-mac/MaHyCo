@@ -23,7 +23,7 @@ enum Test {
     // cas test
      UnitTestCase = 0,
      Sedov = 1,
-     TriplePoint = 2,
+     MonoTriplePoint = 2,
      SodCaseX = 3,
      SodCaseY = 4,
      SodCaseZ = 5,
@@ -33,7 +33,7 @@ enum Test {
      AdvectionVitX = 9,
      AdvectionVitY = 10,
      BiSedov = 11,
-     BiTriplePoint = 12,
+     TriplePoint = 12,
      BiSodCaseX = 13,
      BiSodCaseY = 14,
      BiSodCaseZ = 15,
