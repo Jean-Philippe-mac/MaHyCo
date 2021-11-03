@@ -10,10 +10,8 @@ void GeekEOSService::initEOS(IMeshEnvironment* env)
 {
  
 }
-
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-
 void GeekEOSService::applyEOS(IMeshEnvironment* env)
 {
  
@@ -34,4 +32,4 @@ Real GeekEOSService::getGruneisen(IMeshEnvironment* env) { return options()->gru
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
-ARCANE_REGISTER_SERVICE_PERFECTGASEOS(PerfectGas, PerfectGasEOSService);
+ARCANE_REGISTER_SERVICE_GEEKEOS(Geek, GeekEOSService);

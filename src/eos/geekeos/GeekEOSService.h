@@ -1,9 +1,9 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
-#ifndef PERFECTGASEOSSERVICE_H
-#define PERFECTGASEOSSERVICE_H
+#ifndef GEEKEOSSERVICE_H
+#define GEEKEOSSERVICE_H
 
 #include "eos/IEquationOfState.h"
-#include "eos/perfectgas/PerfectGasEOS_axl.h"
+#include "eos/geekeos/GeekEOS_axl.h"
 #include "arcane/materials/IMeshMaterialMng.h"
 #include "arcane/materials/IMeshMaterial.h"
 #include "arcane/materials/IMeshEnvironment.h"
@@ -26,18 +26,18 @@ using namespace Arcane;
 using namespace Arcane::Materials;
 
 /**
- * Représente le modèle d'équation d'état <em>Gaz Parfait</em>
+ * Représente le modèle d'équation d'état <em>Geek</em>
  */
-class PerfectGasEOSService 
-: public ArcanePerfectGasEOSObject
+class GeekEOSService 
+: public ArcaneGeekEOSObject
 {
 public:
   /** Constructeur de la classe */
-  PerfectGasEOSService(const ServiceBuildInfo & sbi)
-    : ArcanePerfectGasEOSObject(sbi) {}
+  GeekEOSService(const ServiceBuildInfo & sbi)
+    : ArcaneGeekEOSObject(sbi) {}
   
   /** Destructeur de la classe */
-  virtual ~PerfectGasEOSService() {};
+  virtual ~GeekEOSService() {};
 
 public:
   /** 
@@ -63,6 +63,14 @@ public:
    *  Renvoie la constante tension limit de l'environnement. 
    */
   virtual Real getTensionLimitCst(IMeshEnvironment* env);
+  /** 
+   *  Renvoie la pression de reference
+   */
+  virtual Real getPressionRef(IMeshEnvironment* env);
+  /** 
+   *  Renvoie le coefficeint de Gruneisen
+   */
+  virtual Real getGruneisen(IMeshEnvironment* env);
 };
 
 #endif

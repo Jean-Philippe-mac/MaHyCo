@@ -14,9 +14,17 @@ add_library(StiffenedGas eos/stiffenedgas/StiffenedGasEOSService.cc)
 target_include_directories(StiffenedGas PUBLIC .)
 target_link_libraries(StiffenedGas PUBLIC arcane_core)
 
+add_library(Geekeos eos/geekeos/GeekEOSService.cc)
+target_include_directories(Geekeos PUBLIC .)
+target_link_libraries(Geekeos PUBLIC arcane_core)
+
 add_library(RIDER casTest/RIDER/RIDERService.cc)
 target_include_directories(RIDER PUBLIC .)
 target_link_libraries(RIDER PUBLIC arcane_core)
+
+add_library(RIDERGEEK casTest/RIDERGEEK/RIDERGEEKService.cc)
+target_include_directories(RIDERGEEK PUBLIC .)
+target_link_libraries(RIDERGEEK PUBLIC arcane_core)
 
 add_library(SOD casTest/SOD/SODService.cc)
 target_include_directories(SOD PUBLIC .)
@@ -43,6 +51,7 @@ target_link_libraries(Remap PUBLIC arcane_core)
 target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas RIDER SOD SEDOV OTHER POINTTRIPLE Remap)
 
 arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
+arcane_target_add_axl(RIDERGEEK casTest/RIDERGEEK/RIDERGEEK)
 arcane_target_add_axl(SOD casTest/SOD/SOD)
 arcane_target_add_axl(SEDOV casTest/SEDOV/SEDOV)
 arcane_target_add_axl(OTHER casTest/OTHER/OTHER)
@@ -50,6 +59,7 @@ arcane_target_add_axl(POINTTRIPLE casTest/POINTTRIPLE/POINTTRIPLE)
 
 arcane_target_add_axl(PerfectGas eos/perfectgas/PerfectGasEOS)
 arcane_target_add_axl(StiffenedGas eos/stiffenedgas/StiffenedGasEOS)
+arcane_target_add_axl(Geekeos eos/geekeos/GeekEOS)
 
 arcane_target_add_axl(Remap Remap/RemapADI)
 arcane_target_add_axl(Remap Remap/RemapALE)

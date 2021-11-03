@@ -10,13 +10,14 @@ void RIDERGEEKService::initMat(Integer dim)  {
     Cell cell = *icell;
       // toutes les mailles ont les 2 materiaux
       m_materiau[cell] = 0.5;
-    }
   }
 }
 void RIDERGEEKService::initVarMono(Integer dim)  {
  
 }
 void RIDERGEEKService::initVar(Integer dim)  {
+    
+  CellToAllEnvCellConverter all_env_cell_converter(IMeshMaterialMng::getReference(mesh()));
   //caracteristiques du tests
   Real ampli = 0.1;
   Real matelas = 0.1;
@@ -52,7 +53,7 @@ void RIDERGEEKService::initVar(Integer dim)  {
         m_density[cell] +=  m_fracvol[ev] * m_density[ev];
       }
     }
-
+  }
 }
 
 /*---------------------------------------------------------------------------*/
