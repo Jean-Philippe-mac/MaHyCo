@@ -79,7 +79,7 @@
     <nb-iteration-winslow>10</nb-iteration-winslow> -->
     <ordre-projection>2</ordre-projection>
    </remap>
-    <!-- option lagrange -->
+    <schema-csts>0</schema-csts>
     <pseudo-centree>0</pseudo-centree>
      <deltat-init>0.00001</deltat-init>
      <deltat-min>0.00000001</deltat-min>

@@ -75,7 +75,7 @@
    </remap>
    
     <pseudo-centree>0</pseudo-centree>
-    <!-- option lagrange -->
+    <schema-csts>0</schema-csts>
      <deltat-init>0.00001</deltat-init>
      <deltat-min>0.00000001</deltat-min>
      <deltat-max>0.01</deltat-max>
