@@ -5,6 +5,7 @@ include(../mahyco.common.cmake)
 target_sources(${EXAMPLE_NAME} PRIVATE MahycoAnnexe.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE PrepareRemap.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE Eucclhyd.cc)
+target_sources(${EXAMPLE_NAME} PRIVATE GEEK/Schema.cc)
 
 add_library(PerfectGas eos/perfectgas/PerfectGasEOSService.cc)
 target_include_directories(PerfectGas PUBLIC .)

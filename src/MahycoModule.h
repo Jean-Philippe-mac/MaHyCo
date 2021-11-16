@@ -355,6 +355,16 @@ class MahycoModule
   virtual void computeLagrangeVolumeAndCenterOfGravity();
   virtual void updateCellCenteredLagrangeVariables();
   
+  /** schema Geek */
+  virtual void calcCSV();
+  virtual void calcSigVrl_2();
+  virtual void calcSigT();
+  virtual void calcQ();
+  virtual void evolueU();
+  virtual void evolueAR(); 
+  virtual void evolueE(); 
+  virtual void calcVarState(); 
+  
  private:
   
   /**
@@ -395,8 +405,42 @@ class MahycoModule
    /** */
    inline double fderiv(double e, double p, double dpde, double cn1, double m)
      {return 1.+0.5*dpde*cn1/m;}; 
-
-  
+   /** */
+   /* fonction ecretage negative */
+   /** */
+   inline double max_0(double a) {
+    if (a > 0.0) { return a;} else { return 0.0; };
+   };
+   /** */
+   /* Cellule voisine de la Cell cell par la Face */
+   /** */
+   inline Cell getCellVoisine(Cell cell, Face face) 
+   {
+     // une face : deux cell
+     Cell cellvois = face.cell(0);
+     if (cellvois.uniqueId() == cell.uniqueId()) cellvois = face.cell(1);
+     return cellvois;
+   }
+   /** */
+   /* indice local a la cellule cell de la face Face*/
+   /** */
+   inline Integer getindiceface(Cell cell, Face face) 
+   {
+     for (Integer index = 0; index < cell.nbFace(); ++index) 
+       if (cell.face(index).uniqueId() == face.uniqueId()) return index;
+   }
+   /** */
+   /* envcell d'une cell d'un environnement envId */
+   /** */
+   inline EnvCell getenvcell(Cell cell, Integer Id) {
+     CellToAllEnvCellConverter all_env_cell_converter(mm);
+     AllEnvCell all_env_cell = all_env_cell_converter[cell];
+     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+       EnvCell ev = *ienvcell;
+       if (ev.environmentId() == Id ) return ev;
+     }
+   }
+   
   /* variables membre */
   ICartesianMesh* m_cartesian_mesh;
   Materials::IMeshMaterialMng* mm;
@@ -404,6 +448,10 @@ class MahycoModule
   Integer m_nb_env;
   Integer my_rank;
   Integer m_dimension;
+  // provisoire voir comment faire pour les associer aux computeEOS
+  double m_coef_s = 0.0;
+  double m_vu_air = 0.00000001;
+  double m_r_eau = 0.000001;
  
 };
 

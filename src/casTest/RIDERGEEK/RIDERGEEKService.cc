@@ -16,7 +16,6 @@ void RIDERGEEKService::initVarMono(Integer dim)  {
  
 }
 void RIDERGEEKService::initVar(Integer dim)  {
-    
   CellToAllEnvCellConverter all_env_cell_converter(IMeshMaterialMng::getReference(mesh()));
   //caracteristiques du tests
   Real ampli = 0.1;

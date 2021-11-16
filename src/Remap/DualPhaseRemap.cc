@@ -60,9 +60,14 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
      ENUMERATE_FACE(jface, cellb.faces()) { 
       if (jface.localId() == iface.localId()) indexfacecellb = jface.index(); 
      }
+      //info() << " indexfacecellb " << indexfacecellb;
      Real3 outer_face_normalb(m_outer_face_normal[cellb][indexfacecellb]);
+      //info() << " outer_face_normalb " << outer_face_normalb;
      Real outer_face_normal_dirb = math::dot(outer_face_normalb, dirproj);
+      //info() << " outer_face_normal_dirb " << outer_face_normal_dirb;
+      info() << " flux " << m_dual_phi_flux[cellb];
      ENUMERATE_NODE(inode, face.nodes()) {
+        Node node = *inode;
         for (Integer index_env=0; index_env < nb_env; index_env++) { 
         // 2 cellules dans une direction pour les noeuds --> 0.5  
         // recuperation du flux dual de masse calcule par le pente borne ou 
@@ -70,15 +75,9 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
         // mais pas encore multiplié par la normale sortante des faces de la cellule 
         // donc fait ici
         m_back_flux_mass_env[inode][index_env] += 
-        0.5 * m_dual_phi_flux[cellb][nb_env+index_env] * outer_face_normal_dirb;
+        0.5 * m_dual_phi_flux[cellb][nb_env+index_env] ; // * outer_face_normal_dirb;
         // pour le flux total
-        m_back_flux_mass[inode]  +=  0.5 * m_dual_phi_flux[cellb][nb_env+index_env] * outer_face_normal_dirb;
-        }
-        if (math::abs(m_back_flux_mass[inode]) > 1.e-12) {
-          info() << " NODE " << inode.localId();
-          info() << " ajout par la maille " << cellb.uniqueId() << " flux env1 " << m_dual_phi_flux[cellb][2] ;
-          info() << " flux env2 " << m_dual_phi_flux[cellb][3] << " outer "<< outer_face_normal_dirb << " avec " << nb_env << " nbenv ";
-          info() << " soit back front " << m_back_flux_mass[inode];
+        m_back_flux_mass[inode]  +=  0.5 * m_dual_phi_flux[cellb][nb_env+index_env] ; // * outer_face_normal_dirb;
         }
      }
     }
@@ -90,6 +89,7 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
       Real3 outer_face_normalf(m_outer_face_normal[cellf][indexfacecellf]);
       Real outer_face_normal_dirf = math::dot(outer_face_normalf, dirproj);
       ENUMERATE_NODE(inode, face.nodes()) {
+        Node node = *inode;
         for (Integer index_env=0; index_env < nb_env; index_env++) { 
         // 2 cellules dans une direction pour les noeuds --> 0.5  
         // recuperation du flux dual de masse calcule par le pente borne ou 
@@ -97,15 +97,9 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
         // mais pas encore multiplié par la normale sortante des faces de la cellule 
         // donc fait ici
         m_front_flux_mass_env[inode][index_env] += 
-        0.5 * m_dual_phi_flux[cellf][nb_env+index_env] * outer_face_normal_dirf;
+        0.5 * m_dual_phi_flux[cellf][nb_env+index_env] ; // (* outer_face_normal_dirf;
         // pour le flux total
-        m_front_flux_mass[inode] += 0.5 * m_dual_phi_flux[cellf][nb_env+index_env] * outer_face_normal_dirf;
-        }
-        if (math::abs(m_front_flux_mass[inode]) > 1.e-12) {
-          info() << " NODE " << inode.localId();
-          info() << " ajout par la maille " << cellf.uniqueId() << " flux " << m_dual_phi_flux[cellf][2] ;
-          info() << " flux env2 " << m_dual_phi_flux[cellb][3] << " outer " << outer_face_normal_dirf << " avec " << nb_env << " nbenv ";
-          info() << " soit flux front " << m_front_flux_mass[inode];
+        m_front_flux_mass[inode] += 0.5 * m_dual_phi_flux[cellf][nb_env+index_env] ; //* outer_face_normal_dirf;
         }
       }
     }

@@ -61,6 +61,14 @@ public:
    *  Renvoie la constante tension limit de l'environnement. 
    */
   virtual Real getTensionLimitCst(IMeshEnvironment* env) = 0;
+  /** 
+   *  Renvoie la pression de reference
+   */
+  virtual Real getPressionRef(IMeshEnvironment* env) = 0;
+  /** 
+   *  Renvoie le coefficient grunseisen
+   */
+  virtual Real getGruneisen(IMeshEnvironment* env) = 0;
   
 };
 

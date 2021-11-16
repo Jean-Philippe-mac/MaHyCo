@@ -52,7 +52,10 @@
   <!-- FRACVOL -->
   <variable field-name="fracvol" name="FracVol" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
-  <!-- CELL VOLUME OLD N	 -->
+  <!-- CELL VOLUME OLD N-1	 -->
+  <variable field-name="cell_volume_old" name="CellVolumeOld" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- CELL VOLUME N	 -->
   <variable field-name="cell_volume_n" name="CellVolumeN" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
   <!-- CELL VOLUME	 -->
@@ -61,6 +64,9 @@
   <!-- CELL VOLUME EULER	 -->
   <variable field-name="euler_volume" name="EulerVolume" data-type="real" item-kind="cell"
 	    dim="0" material="false" dump="true" need-sync="true" />
+  <!-- DIV U N	 -->
+  <variable field-name="div_u_n" name="DivUN" data-type="real" item-kind="cell"
+	    dim="0" dump="false" need-sync="true" />
   <!-- DIV U	 -->
   <variable field-name="div_u" name="DivU" data-type="real" item-kind="cell"
 	    dim="0" dump="false" need-sync="true" />
@@ -93,6 +99,9 @@
 	    dim="0" dump="true" need-sync="true" />
   <!-- 	NODE COORD_0	 -->
   <variable field-name="node_coord_0" name="NodeCoord0" data-type="real3" item-kind="node"
+	    dim="0" dump="true" need-sync="true" />
+  <!-- 	CELL COORD N	 -->
+  <variable field-name="cell_coord_n" name="CellCoordN" data-type="real3" item-kind="cell"
 	    dim="0" dump="true" need-sync="true" />
   <!-- 	CELL COORD	 -->
   <variable field-name="cell_coord" name="CellCoord" data-type="real3" item-kind="cell"
@@ -138,10 +147,13 @@
 	    dim="0" material="false" dump="true" need-sync="true" />
     <!-- 	isDirFace	 -->
     <variable field-name="is_dir_face" name="IsDirFace" data-type="bool" item-kind="face"
-	    dim="1" dump="true" need-sync="true" /><!-- 	U REMAP2	 -->
+	    dim="1" dump="true" need-sync="true" />
+    <!-- 	outer_face_normal	 -->
     <variable field-name="outer_face_normal" name="OuterFaceNormal" data-type="real3" item-kind="cell"
 	    dim="1" dump="true" need-sync="true" />
-    
+    <!-- 	outer_face_normalN	 -->
+    <variable field-name="outer_face_normal_n" name="OuterFaceNormalN" data-type="real3" item-kind="cell"
+	    dim="1" dump="true" need-sync="true" />
     
     <!-- Variables Eucclhyd -->
        <!-- 	PHI DUAL LAGRANGE	 -->
@@ -190,9 +202,41 @@
    <!-- 	CELL GAUSSIEN1	 -->
    <variable field-name="cell_gaussian1" name="CellGaussien1" data-type="real" item-kind="cell" dim="0" dump="true" need-sync="true" />
    <!-- 	CELL GAUSSIEN2	 -->
-   <variable field-name="cell_gaussian2" name="CellGaussien2" data-type="real" item-kind="cell" dim="0" dump="true" need-sync="true" />
+   <variable field-name="cell_gaussian2" name="CellGaussien2" data-type="real" item-kind="cell" dim="0" dump="true" need-sync="true" /> 
+   <!-- 	CELL VELOCITY PER ENV AT N-1 -->
+   <variable field-name="matcell_velocity_old"  name="MatCellVelocityOld"  data-type="real3" item-kind="cell" dim="0" material="true" dump="true" need-sync="true" />
+   <!-- 	CELL VELOCITY PER ENV AT N-->
+   <variable field-name="matcell_velocity_n"  name="MatCellVelocityN"  data-type="real3" item-kind="cell" dim="0" 
+   material="true" dump="true" need-sync="true" />
+   <!-- 	CELL VELOCITY PER ENV -->
    <variable field-name="matcell_velocity"  name="MatCellVelocity"  data-type="real3" item-kind="cell" dim="0" 
    material="true" dump="true" need-sync="true" />
+   <!-- 	CELL VELOCITY PER ENV -->
+   <variable field-name="matcell_relativevelocity"  name="MatCellRelativeVelocity"  data-type="real3" item-kind="cell" dim="0" material="true" dump="true" need-sync="true" />
+   <!-- 	SIGMA N -->
+   <variable field-name="mat_sigma_n"  name="MatSigmaN"  data-type="real" item-kind="cell" dim="1" material="true" dump="true" need-sync="true" />
+   <!-- 	SIGMAT N -->
+   <variable field-name="total_mat_sigma_n"  name="TotalMatSigmaN"  data-type="real" item-kind="cell" dim="1" material="true" dump="true" need-sync="true" />
+   <!-- 	SIGMA -->
+   <variable field-name="mat_sigma"  name="MatSigma"  data-type="real" item-kind="cell" dim="1" material="true" dump="true" need-sync="true" />
+   <!-- 	SIGMAT -->
+   <variable field-name="total_mat_sigma"  name="TotalMatSigma"  data-type="real" item-kind="cell" dim="1" material="true" dump="true" need-sync="true" />
+   <!-- 	ALPHARHO OLD : fracvol*density-->
+   <variable field-name="alpha_rho_old"  name="AlphaRhoOld"  data-type="real" item-kind="cell" dim="0" material="true" dump="true" need-sync="true" />
+   <!-- 	ALPHARHO : fracvol*density-->
+   <variable field-name="alpha_rho_n"  name="AlphaRhoN"  data-type="real" item-kind="cell" dim="0" material="true" dump="true" need-sync="true" /> 
+   <!-- 	ALPHARHO : fracvol*density-->
+   <variable field-name="alpha_rho"  name="AlphaRho"  data-type="real" item-kind="cell" dim="0" material="true" dump="true" need-sync="true" /> 
+   <!-- 	coefficient de stockes -->
+   <variable field-name="stockes"  name="Stockes"  data-type="real3" item-kind="cell" dim="0" material="true" dump="true" need-sync="true" />
+   <!-- 	transfert volumique -->
+   <variable field-name="volumic_transfert"  name="VolumicTransfert"  data-type="real" item-kind="cell" dim="1" material="true" dump="true" need-sync="true" />
+   <!-- 	pressure_advection -->
+   <variable field-name="pressure_advection"  name="PressureAdvection"  data-type="real" item-kind="cell" dim="0" material="true" dump="true" need-sync="true" />
+   <!-- dissipation -->
+   <variable field-name="dissipation"  name="Dissipation"  data-type="real" item-kind="cell" dim="0" material="true" dump="true" need-sync="true" />
+   <!-- rapport de compressibilité -->
+   <variable field-name="compress"  name="Compress"  data-type="real" item-kind="cell" dim="0" material="true" dump="true" need-sync="true" />
    </variables>
   
 <entry-points>
@@ -223,6 +267,14 @@
   <entry-point method-name="computeSubCellForce" name="ComputeSubCellForce"  where="compute-loop" property="none" />
   <entry-point method-name="computeLagrangeVolumeAndCenterOfGravity" name="ComputeLagrangeVolumeAndCenterOfGravity"  where="compute-loop" property="none" />
   <entry-point method-name="updateCellCenteredLagrangeVariables" name="UpdateCellCenteredLagrangeVariables"  where="compute-loop" property="none" />
+  <!-- special eucclhyd -->
+  <entry-point method-name="calcCSV" name="CalcCSV" where="compute-loop" property="none" />
+  <entry-point method-name="calcQ" name="CalcQ" where="compute-loop" property="none" />
+  <entry-point method-name="calcSigVrl_2" name="CalcSigVrl_2" where="compute-loop" property="none" />
+  <entry-point method-name="evolueU" name="EvolueU" where="compute-loop" property="none" />
+  <entry-point method-name="evolueAR" name="EvolueAR" where="compute-loop" property="none" />
+  <entry-point method-name="evolueE" name="EvolueE" where="compute-loop" property="none" />
+  <entry-point method-name="calcVarState" name="CalcVarstate" where="compute-loop" property="none" />
       
 </entry-points>
 

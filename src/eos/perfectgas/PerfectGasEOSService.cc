@@ -58,6 +58,8 @@ void PerfectGasEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
 /*---------------------------------------------------------------------------*/
 Real PerfectGasEOSService::getAdiabaticCst(IMeshEnvironment* env) { return options()->adiabaticCst();}
 Real PerfectGasEOSService::getTensionLimitCst(IMeshEnvironment* env) { return options()->limitTension();}
+Real PerfectGasEOSService::getPressionRef(IMeshEnvironment* env) { return 0.;}
+Real PerfectGasEOSService::getGruneisen(IMeshEnvironment* env) { return 0.;}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
