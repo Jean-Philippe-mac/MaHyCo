@@ -70,7 +70,7 @@
 
     <pseudo-centree>0</pseudo-centree>
     <with-projection>false</with-projection>
-    <schema-csts>0</schema-csts>
+    <!-- option lagrange -->
     <with-newton>true</with-newton>
      <deltat-init>0.00001</deltat-init>
      <deltat-min>0.00000001</deltat-min>

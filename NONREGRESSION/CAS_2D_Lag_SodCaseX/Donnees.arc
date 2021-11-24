@@ -69,7 +69,7 @@
    </cas-model>
     <pseudo-centree>0</pseudo-centree>
     <with-projection>false</with-projection>
-    <schema-csts>0</schema-csts>
+    <!-- option lagrange -->
      <deltat-init>0.00001</deltat-init>
      <deltat-min>0.00000001</deltat-min>
      <deltat-max>0.0001</deltat-max>
