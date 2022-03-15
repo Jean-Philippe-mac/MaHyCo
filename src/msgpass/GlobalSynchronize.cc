@@ -14,7 +14,7 @@ void pack_var2buf(IntegerConstArrayView item_idx,
     ArrayView<Byte> buf) 
 {
   // Ne devrait jamais être appelé
-  ARCANE_ASSERT(false, ("pack_var2buf à spécifialiser"));
+  throw NotSupportedException(A_FUNCINFO, "pack_var2buf à spécifialiser");
 }
 
 // Spécialisation pour MeshVariable***Scalar***RefT
