@@ -235,9 +235,10 @@ computeNodeMass()
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeNodeMass()";
    // Initialisation ou reinitialisation de la masse nodale
-  {
-    auto queue = m_acc_env->newQueue();
-    auto command = makeCommand(queue);
+  auto async_node_mass_update = [&](NodeGroup node_group, RunQueue* async_queue) {
+    
+//     auto queue = m_acc_env->newQueue();
+    auto command = makeCommand(async_queue);
 
     Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
     auto nc_cty = m_acc_env->connectivityView().nodeCell();
@@ -248,17 +249,20 @@ computeNodeMass()
     // Le calcul sur les noeuds fantômes externes n'est pas correct
     // de toute façon (d'où m_node_mass.synchronize) autant ne calculer
     // que sur ownNodes()
-    //NodeGroup node_group = allNodes();
-    NodeGroup node_group = ownNodes();
+    // NodeGroup node_group = allNodes();
+    // NodeGroup node_group = ownNodes();
+    // TODO (BM) : on passe maintenant par computeAndSync qui calcul déjà sur ownNodes()
 
-    command << RUNCOMMAND_ENUMERATE(Node,nid,node_group) {
+    command << RUNCOMMAND_ENUMERATE(Node, nid, node_group) {
       Real sum_mass = 0.;
       for( CellLocalId cid : nc_cty.cells(nid) )
         sum_mass += in_cell_mass_g[cid];
       out_node_mass[nid] = one_over_nbnode * sum_mass;
     };
-  }
-  m_node_mass.synchronize();
+  };
+  
+//   m_node_mass.synchronize();
+  m_acc_env->vsyncMng()->computeAndSync(async_node_mass_update, m_node_mass, VS_overlap_evqueue);
   PROF_ACC_END;
 }
 /**
@@ -312,14 +316,17 @@ saveValuesAtN()
   // donc nous ont remet le bon old pas de temps
   m_global_old_deltat = m_old_deltat;
   
-  // synchronisation debut de pas de temps (avec projection nécéssaire ?)
-  m_pseudo_viscosity.synchronize();
-  m_density.synchronize();
-  m_internal_energy.synchronize();
-  m_cell_volume.synchronize();
-  m_pressure.synchronize();
-  m_cell_cqs.synchronize();
-  m_velocity.synchronize();
+  // synchronisation debut de pas de temps (avec projection nécéssaire ? TODO BM 15/03/2022 : vérifier si ils sont nécessaires)
+  m_pseudo_viscosity.synchronize();// Besoin de synchro pour cas lagrange.
+  m_density.synchronize(); // Besoin de synchro pour cas lagrange.
+  m_internal_energy.synchronize(); // A veifier 
+  m_cell_volume.synchronize();// A veifier 
+  m_pressure.synchronize();// A veifier 
+//   
+//   m_cell_cqs.synchronize();
+//   m_velocity.synchronize();
+//   m_acc_env->vsyncMng()->globalSynchronize(m_cell_cqs);
+//   m_acc_env->vsyncMng()->globalSynchronize(m_velocity);
 
   // Exploitation de plusieurs queues asynchrones en concurrence
   // queue_cell => recopie des valeurs pures et globales
@@ -620,9 +627,11 @@ updateForceAndVelocity(Real dt,
     out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode]) * in_force[snode];;
   }
 #else
-  {
-    auto queue = m_acc_env->newQueue();
-    auto command = makeCommand(queue);
+//   auto queue = m_acc_env->newQueue();
+  
+  auto async_velocity_update = [&](NodeGroup node_group, RunQueue* async_queue) {
+    
+    auto command = makeCommand(async_queue);
 
     auto in_pressure         = ax::viewIn(command, v_pressure.globalVariable());
     auto in_pseudo_viscosity = ax::viewIn(command, v_pseudo_viscosity.globalVariable());
@@ -639,7 +648,7 @@ updateForceAndVelocity(Real dt,
     auto in_velocity  = ax::viewIn(command, v_velocity_in);
     auto out_velocity = ax::viewOut(command, v_velocity_out);
     
-    command << RUNCOMMAND_ENUMERATE(Node,nid,allNodes()) {
+    command << RUNCOMMAND_ENUMERATE(Node, nid, node_group) {
       Int32 first_pos = nid.localId() * max_node_cell;
       Integer index = 0;
       Real3 node_force = Real3::zero();
@@ -654,10 +663,14 @@ updateForceAndVelocity(Real dt,
       // On peut mettre la vitesse à jour dans la foulée
       out_velocity[nid] = in_velocity[nid] + ( dt / in_mass[nid]) * node_force;
     };
-  }
+  };
 #endif
 
-  v_velocity_out.synchronize();
+//   v_velocity_out.synchronize();
+
+  // On fait le calcul sur les noeuds "own" v_velocity_out 
+  // et on synchronise les noeuds fantômes de v_velocity_out
+  m_acc_env->vsyncMng()->computeAndSync(async_velocity_update, v_velocity_out, VS_overlap_evqueue);
   PROF_ACC_END;
 }
 
@@ -901,7 +914,7 @@ updatePosition()
   {
     ENUMERATE_NODE(inode, allNodes()){
       Node node = *inode;
-      if (node.nbCell() == 4) {
+      if (node.nbCell() == 4) { // TODO BM 15/03/2022 : pourquoi (node.nbCell() == 4) ???? Un vieux reste des débuts en 2D ??
         m_node_coord[inode] += deltat * m_velocity[inode];
       }
     }
@@ -1054,7 +1067,11 @@ computeGeometricValues()
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << my_rank << " : " << " Entree dans computeGeometricValues() ";
   
-  m_node_coord.synchronize();
+  
+//   m_node_coord.synchronize();
+  m_acc_env->vsyncMng()->globalSynchronize(m_node_coord);
+  // TODO à=BM 15/03/2022 besoin de synchro meme si updatePosition met à jour m_node_coord sur les allNodes
+  
   if ( m_dimension == 3) {
     {
       auto queue = m_acc_env->newQueue();
@@ -1108,7 +1125,10 @@ computeGeometricValues()
       }
     }  
  }
-  m_cell_cqs.synchronize(); // TODO : pourquoi synchronize ?
+ 
+//   m_cell_cqs.synchronize(); // TODO : pourquoi synchronize ?
+//   m_acc_env->vsyncMng()->globalSynchronize(m_cell_cqs);
+
  
   if (options()->longueurCaracteristique() == "faces-opposees")
   {
@@ -1333,10 +1353,12 @@ updateDensity()
   debug() << my_rank << " : " << " Entree dans updateDensity() ";
 
   // On lance de manière asynchrone les calculs des valeurs globales/pures sur GPU sur queue_glob
-  auto queue_glob = m_acc_env->newQueue();
-  queue_glob.setAsync(true);
-  {
-    auto command = makeCommand(queue_glob);
+//   auto queue_glob = m_acc_env->newQueue();
+//   queue_glob.setAsync(true);
+  
+  auto async_div_u_update = [&](CellGroup cell_group, RunQueue* async_queue) {
+    
+    auto command = makeCommand(async_queue);
 
     Real inv_deltat = 1.0/m_global_deltat(); // ne pas appeler de méthodes de this dans le kernel
 
@@ -1349,7 +1371,7 @@ updateDensity()
 
     auto out_div_u = ax::viewOut(command, m_div_u);
 
-    command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()){
+    command << RUNCOMMAND_ENUMERATE(Cell, cid, cell_group){
 
       Real new_density, tau_density;
       compute_density_tau(in_density_n_g[cid], 
@@ -1364,7 +1386,11 @@ updateDensity()
         inv_deltat  * ( 1.0 / iou_density_g[cid] - 1.0 / in_density_n_g[cid] )
         / iou_tau_density_g[cid];
     };
-  }
+  };
+  
+//   m_acc_env->vsyncMng()->computeAndSync(async_div_u_update, m_div_u, VS_overlap_evqueue); // La boucle est 0D, pas besoin de synchro mpi
+  m_acc_env->vsyncMng()->computeAndSync(async_div_u_update, m_div_u, VS_nosync);
+  
   // Pendant ce temps, calcul sur GPU sur la queue_glob
 
   auto menv_queue = m_acc_env->multiEnvQueue();
@@ -1413,12 +1439,13 @@ updateDensity()
     }; // asynchrone par rapport au CPU et aux autres queues
   }
 #endif
-  queue_glob.barrier();
+//   queue_glob.barrier();
   menv_queue->waitAllQueues();
   
-  m_density.synchronize();
-  m_tau_density.synchronize();
-  m_div_u.synchronize();
+//   m_density.synchronize();
+//   m_tau_density.synchronize();
+//   m_div_u.synchronize();
+  
   PROF_ACC_END;
 }
 /**
